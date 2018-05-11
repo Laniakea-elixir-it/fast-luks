@@ -1,0 +1,41 @@
+---
+- hosts: localhost
+  connection: local
+
+  vars:
+    script_path: /tmp
+
+    cipher: 'aes-xts-plain64' # set cipher algorithm [default: aes-xts-plain64]
+    keysize: '256'            # set key size [default: 256]
+    hash_algorithm: 'sha256'  # set hash algorithm used for key derivation
+    device: '/dev/vdb'        # set device [default: /dev/vdb]
+    mountpoint: '/export'     # set mount point [default: /export]
+    filesystem: 'ext4'        # filesystem [default: ext4] 
+    paranoic_mode: false      # enable paranoic mode [default false]
+
+
+    user_passphrase: Not_a_valid_passphrase # A passphrase with at least 8 char long alphanumeric string
+
+  pre_tasks:
+    - name: get script
+      get_url:
+        url: 'https://raw.githubusercontent.com/mtangaro/GalaxyCloud/master/LUKS/fast_luks.sh'
+        dest: '{{ script_path }}/fast_luks.sh'
+        mode: a+x
+
+    - name: Encrypt volume
+      shell: 'printf "{{ user_passphrase }}\n{{ user_passphrase }}\n" | ./fast_luks.sh -c {{ cipher }} -k {{ keysize }} -a {{ hash_algorithm }} -d {{ device }} -m {{ mountpoint }} -f {{ filesystem }} --foreground --non-interactive'
+      args:
+        chdir: '{{ script_path }}'
+
+    - name: Install pv to wipe data
+      apt:
+        name: pv
+        state: present
+      when: paranoic_mode|bool
+
+    - name: Encrypt volume
+      shell: 'printf "{{ user_passphrase }}\n{{ user_passphrase }}\n" | ./fast_luks.sh --paranoic-mode -c {{ cipher }} -k {{ keysize }} -a {{ hash_algorithm }} -d {{ device }} -m {{ mountpoint }} -f {{ filesystem }} --foreground --non-interactive'
+      args:
+        chdir: '{{ script_path }}'
+      when: paranoic_mode|bool
