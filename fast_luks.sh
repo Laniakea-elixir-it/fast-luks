@@ -224,7 +224,7 @@ function check_vol(){
        logs_debug "External volume on $device. Using it for encryption."
        if [[ ! -d $mountpoint ]]; then
          logs_debug "Creating $mountpoint"
-         mkdir -p $mountpooint
+         mkdir -p $mountpoint
          logs_debug "Device name: $device"
          logs_debug "Mountpoint: $mountpoint"
        fi
