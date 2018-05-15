@@ -145,7 +145,7 @@ function lock(){
         # lock is stale, remove it and restart
         echo "$debug [$STAT] Removing fake lock file of nonexistant PID ${OTHERPID}" >&2
         rm -rf "${LOCKDIR}"
-        logs_debug "Restarting LUKS script"
+        echo "$debug [$STAT] Restarting LUKS script" >&2
         exec "$0" "$@"
       else
         # lock is valid and OTHERPID is active - exit, we're locked!
@@ -174,15 +174,15 @@ function unlock(){
 
 #___________________________________
 function info(){
-  echo "$debug [$STAT] LUKS header information for $device"
-  echo "$debug [$STAT] Cipher algorithm: ${cipher_algorithm}"
-  echo "$debug [$STAT] Hash algorithm${hash_algorithm}"
-  echo "$debug [$STAT] Keysize: ${keysize}"
-  echo "$debug [$STAT] Device: ${device}"
-  echo "$debug [$STAT] Crypt device: ${cryptdev}"
-  echo "$debug [$STAT] Mapper: /dev/mapper/${cryptdev}"
-  echo "$debug [$STAT] Mountpoint: ${mountpoint}"
-  echo "$debug [$STAT] File system: ${filesystem}"
+  echo_debug "LUKS header information for $device"
+  echo_debug "Cipher algorithm: ${cipher_algorithm}"
+  echo_debug "Hash algorithm${hash_algorithm}"
+  echo_debug "Keysize: ${keysize}"
+  echo_debug "Device: ${device}"
+  echo_debug "Crypt device: ${cryptdev}"
+  echo_debug "Mapper: /dev/mapper/${cryptdev}"
+  echo_debug "Mountpoint: ${mountpoint}"
+  echo_debug "File system: ${filesystem}"
 }
 
 #____________________________________
@@ -190,17 +190,17 @@ function info(){
 
 function install_cryptsetup(){
   if [[ -r /etc/os-release ]]; then
-      . /etc/os-release
-      echo_info "$ID"
-      if [ "$ID" = "ubuntu" ]; then
-          echo_info "Distribution: Ubuntu. Using apt."
-          apt-get install -y cryptsetup pv
-      else
-          echo_info "Distribution: CentOS. Using yum."
-          yum install -y cryptsetup-luks pv
-      fi
+    . /etc/os-release
+    echo_info "$ID"
+    if [ "$ID" = "ubuntu" ]; then
+      echo_info "Distribution: Ubuntu. Using apt."
+      apt-get install -y cryptsetup pv
+    else
+      echo_info "Distribution: CentOS. Using yum."
+      yum install -y cryptsetup-luks pv
+    fi
   else
-      echo_info "Not running a distribution with /etc/os-release available."
+    echo_info "Not running a distribution with /etc/os-release available."
   fi
 }
 
@@ -209,9 +209,9 @@ function install_cryptsetup(){
 
 function check_cryptsetup(){
   echo ""
-  echo "$info [$STAT] Check if the required applications are installed..."
-  type -P dmsetup &>/dev/null || echo "$info [$STAT] dmestup is not installed. Installing..." #TODO add install device_mapper
-  type -P cryptsetup &>/dev/null || { echo "$info [$STAT] cryptsetup is not installed. Installing.."; install_cryptsetup  >> "$LOGFILE" 2>&1; echo "$info [$STAT] cryptsetup installed!"; }
+  echo_info "Check if the required applications are installed..."
+  type -P dmsetup &>/dev/null || echo_info "dmestup is not installed. Installing..." #TODO add install device_mapper
+  type -P cryptsetup &>/dev/null || { echo_info "cryptsetup is not installed. Installing.."; install_cryptsetup >> "$LOGFILE" 2>&1; echo_info "cryptsetup installed."; }
 }
 
 #____________________________________
@@ -278,14 +278,14 @@ function setup_device(){
 #____________________________________
 function open_device(){
   echo ""
-  echo "$info [$STAT] Open LUKS volume."
+  echo_info "Open LUKS volume."
   if [ ! -b /dev/mapper/${cryptdev} ]; then
     cryptsetup luksOpen $device $cryptdev
   else
-    echo "$error [$STAT] Crypt device already exists! Please check logs: $LOGFILE"
-    echo "$error [$STAT] Unable to luksOpen device. " >> "$LOGFILE" 2>&1
-    echo "$error [$STAT] /dev/mapper/${cryptdev} already exists." >> "$LOGFILE" 2>&1
-    echo "$error [$STAT]  Mounting $device to $mountpoint again." >> "$LOGFILE" 2>&1
+    echo_error "Crypt device already exists! Please check logs: $LOGFILE"
+    logs_error "Unable to luksOpen device. "
+    logs_error "/dev/mapper/${cryptdev} already exists."
+    logs_error "Mounting $device to $mountpoint again."
     mount $device $mountpoint >> "$LOGFILE" 2>&1
     unlock # unlocking script instance
     exit 1
@@ -295,7 +295,7 @@ function open_device(){
 #____________________________________
 function encryption_status(){
   echo ""
-  echo "$info [$STAT] check $cryptdev status with cryptsetup status"
+  echo_info "Check $cryptdev status with cryptsetup status"
   cryptsetup -v status $cryptdev
 }
 
@@ -323,11 +323,11 @@ function wipe_data(){
 #____________________________________
 function create_fs(){
   echo ""
-  echo "$info [$STAT] Creating filesystem..."
+  echo_info "Creating filesystem..."
   mkfs.${filesystem} /dev/mapper/${cryptdev} #Do not redirect mkfs, otherwise no interactive mode!
   if [ $? != 0 ]; then
-    echo "$error [$STAT] While creating ${filesystem} filesystem. Please check logs: $LOGFILE"
-    echo "$error [$STAT] Command mkfs failed!"
+    echo_error "While creating ${filesystem} filesystem. Please check logs: $LOGFILE"
+    echo_error "Command mkfs failed!"
     unlock
     exit 1
   fi
@@ -336,7 +336,7 @@ function create_fs(){
 #____________________________________
 function mount_vol(){
   echo ""
-  echo "$info [$STAT] Mounting encrypted device..."
+  echo_info "Mounting encrypted device..."
   mount /dev/mapper/${cryptdev} $mountpoint
   df -Hv >> "$LOGFILE" 2>&1
 }
@@ -399,7 +399,7 @@ function encrypt(){
   if [[ $foreground == false ]]; then
 
     # Run this in background. 
-    echo "$info [$STAT] Run script in backgroud."
+    echo_info "Run script in backgroud."
 
     (
       # Wipe data for security
@@ -421,7 +421,7 @@ function encrypt(){
 
   elif [[ $foreground == true ]]; then
 
-    echo "$info [$STAT] Run script in foreground."
+    echo_info "Run script in foreground."
 
     if [[ $paranoic == true ]]; then wipe_data; fi
     create_fs
