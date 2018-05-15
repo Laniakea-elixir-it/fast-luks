@@ -138,7 +138,7 @@ function lock(){
         # lock is stale, remove it and restart
         echo "$debug [$STAT] Removing fake lock file of nonexistant PID ${OTHERPID}" >&2
         rm -rf "${LOCKDIR}"
-        logs_debug 'Restarting LUKS script'
+        logs_debug "Restarting LUKS script"
         exec "$0" "$@"
       else
         # lock is valid and OTHERPID is active - exit, we're locked!
@@ -211,21 +211,27 @@ function check_cryptsetup(){
 # Check volume 
 
 function check_vol(){
-  logs_debug 'Check volume...'
+  logs_debug "Checking storage volume."
 
   if [ $(mount | grep -c $mountpoint) == 1 ]; then
 
     device=$(df -P $mountpoint | tail -1 | cut -d' ' -f 1)
-    logs_debug 'Device name: '$device
+    logs_debug "Device name: $device"
 
   elif [ $(mount | grep -c $mountpoint) == 0 ]; then
 
      if [[ -b $device ]]; then
-       logs_debug 'External volume on $device. Using it for encryption.'
+       logs_debug "External volume on $device. Using it for encryption."
+       if [[ ! -d $mountpoint ]]; then
+         logs_debug "Creating $mountpoint"
+         mkdir -p $mountpooint
+         logs_debug "Device name: $device"
+         logs_debug "Mountpoint: $mountpoint"
+       fi
      else
-       logs_error 'Device not mounted, exiting!'
-       logs_error 'Please check logfile: '
-       logs_error 'No device  mounted to $mountpoint:'
+       logs_error "Device not mounted, exiting!"
+       logs_error "Please check logfile: "
+       logs_error "No device  mounted to $mountpoint: "
        df -h >> "$LOGFILE" 2>&1
        unlock # unlocking script instance
        exit 1
