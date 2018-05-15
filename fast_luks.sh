@@ -487,12 +487,12 @@ do
     *) echo >&2 "Loading defaults"; DEFAULT=YES;; # terminate while loop
   esac
   shift
-  echo "$debug [$STAT] Custom options:" >> "$LOGFILE" 2>&1
+  logs_debug "Custom options:"
   info >> "$LOGFILE" 2>&1
 done
 
 if [[ -n $1 ]]; then
-    echo "$info [$STAT] Last line of file specified as non-opt/last argument:"
+    logs_info "Last line of file specified as non-opt/last argument:"
     tail -1 $1
 fi
 
@@ -514,7 +514,7 @@ if [[ $print_help = true ]]
            -f, --filesystem		\tset filesystem [default: ext4]\n
            --default			\t\tload default values\n"
     echo -e $usage
-    echo -e "\n$info [$STAT] Just printing help." >> "$LOGFILE" 2>&1
+    logs_info "Just printing help."
     unlock
     exit 0
 fi
