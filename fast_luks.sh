@@ -12,7 +12,7 @@
 # All credits to John Troon.
 #
 # The script is able to detect the $device only if it is mounted.
-# This is by default for our use-case.
+# Otherwise it will use default $device and $mountpoint.
 
 STAT="fast-luks"
 LOGFILE="/tmp/luks$now.log"
@@ -91,13 +91,20 @@ function intro(){
 time=$(date +"%Y-%m-%d %H:%M:%S")
 info="INFO  "$time
 debug="DEBUG "$time
-warn="WARNING  "$time
+warn="WARNING "$time
 error="ERROR "$time
 
-function logs_debug(){ echo -e "$debug [$STAT] $1" >> $LOGFILE 2>&1; }
-function logs_info(){ echo -e "$info [$STAT] $1" >> $LOGFILE 2>&1; }
-function logs_warning(){ echo -e "$warning [$STAT] $1" >> $LOGFILE 2>&1; }
-function logs_error(){ echo -e "$error [$STAT] $1" >> $LOGFILE 2>&1; }
+# echo functions
+function echo_debug(){ echo -e "$debug [$STAT] $1"; }
+function echo_info(){ echo -e "$info [$STAT] $1"; }
+function echo_warn(){ echo -e "$warn [$STAT] $1"; }
+function echo_error(){ echo -e "$error [$STAT] $1"; }
+
+# Logs functions
+function logs_debug(){ echo_debug $1 >> $LOGFILE 2>&1; }
+function logs_info(){ echo_info $1 >> $LOGFILE 2>&1; }
+function logs_warn(){ echo_warn $1 >> $LOGFILE 2>&1; }
+function logs_error(){ echo_error $1 >> $LOGFILE 2>&1; }
 
 #____________________________________
 # Lock/UnLock Section
@@ -184,16 +191,16 @@ function info(){
 function install_cryptsetup(){
   if [[ -r /etc/os-release ]]; then
       . /etc/os-release
-      echo $ID
+      echo_info "$ID"
       if [ "$ID" = "ubuntu" ]; then
-          echo "$info [$STAT] Distribution: Ubuntu. Using apt."
-          apt-get install -y cryptsetup
+          echo_info "Distribution: Ubuntu. Using apt."
+          apt-get install -y cryptsetup pv
       else
-          echo "$info [$STAT] Distribution: CentOS. Using yum."
+          echo_info "Distribution: CentOS. Using yum."
           yum install -y cryptsetup-luks pv
       fi
   else
-      echo "$info [$STAT] Not running a distribution with /etc/os-release available."
+      echo_info "Not running a distribution with /etc/os-release available."
   fi
 }
 
@@ -303,14 +310,14 @@ function encryption_status(){
 
 function wipe_data(){
   echo ""
-  echo "$info [$STAT] Wiping disk data by overwriting the entire drive with random data"
-  echo "$info [$STAT] This might take time depending on the size & your machine!"
+  echo_info "Wiping disk data by overwriting the entire drive with random data"
+  echo_info "This might take time depending on the size & your machine!"
 
   #dd if=/dev/zero of=/dev/mapper/${cryptdev} bs=1M  status=progress
   pv -tpreb /dev/zero | dd of=/dev/mapper/${cryptdev} bs=1M status=progress;
 
-  echo "$debug [$STAT] Block file /dev/mapper/${cryptdev} created."
-  echo "$debug [$STAT] Wiping done."
+  echo_info "Block file /dev/mapper/${cryptdev} created."
+  echo_info "Wiping done."
 }
 
 #____________________________________
@@ -367,7 +374,7 @@ function end_encrypt_procedure(){
   echo ""
   # send signal to unclok waiting condition for automation software (e.g Ansible)
   echo "LUKS encryption completed." > $SUCCESS_FILE # WARNING DO NOT MODFIFY THIS LINE, THIS IS A CONTROL STRING FOR ANSIBLE
-  echo "$info [$STAT] SUCCESSFUL."
+  echo_info "SUCCESSFUL."
 }
 
 #____________________________________
@@ -409,10 +416,7 @@ function encrypt(){
       create_cryptdev_ini_file >> "$LOGFILE" 2>&1
     
       # LUKS encryption finished. Print end dialogue.
-      end_encrypt_procedure >> "$LOGFILE" 2>&1
-    
-      # Unlock once done.
-      unlock >> "$LOGFILE" 2>&1
+      end_encrypt_procedure >> "$LOGFILE" 2>&1  
     ) &
 
   elif [[ $foreground == true ]]; then
@@ -424,10 +428,11 @@ function encrypt(){
     mount_vol
     create_cyptdev_ini_file
     end_encrypt_procedure
-    unlock >> "$LOGFILE" 2>&1
 
   fi # end foregroud if
 
+  # Unlock once done.
+  unlock >> "$LOGFILE" 2>&1
 }
 
 ################################################################################
@@ -444,7 +449,7 @@ lock "$@"
 
 # If running script with no arguments then loads defaults values.
 if [ $# -lt 1 ]; then
-  logs_warning "No inputs. Using defaults values."
+  logs_warn "No inputs. Using defaults values."
   info >> "$LOGFILE" 2>&1
 fi
 
@@ -473,7 +478,7 @@ do
     # TODO implement non-interactive mode. Allow to pass password from command line.
     # TODO Currently it just avoid to print intro and deny random password generation.
     # TODO Allow to inject passphrase from command line (not secure)
-    # TODO create a "--password" option to inject password.
+    # TODO create a "--passphrase" option to inject password.
     --non-interactive) non_interactive=true;;
 
     --foreground) foreground=true;; # run script in foregrond, allowing to use it on ansible playbooks.
@@ -512,6 +517,9 @@ if [[ $print_help = true ]]
            -e, --cryptdev		\tset crypt device [default: cryptdev]\n
            -m, --mountpoint		\tset mount point [default: /export]\n
            -f, --filesystem		\tset filesystem [default: ext4]\n
+           --paranoic-mode		\twipe data after encryption procedure. This take time [default: false]\n
+           --non-interactive		\tnon-interactive mode, only command line [default: false]
+           --foregroun			\trun script in foreground [default: false]
            --default			\t\tload default values\n"
     echo -e $usage
     logs_info "Just printing help."
