@@ -47,13 +47,6 @@ logs=$(cat < /dev/urandom | tr -dc "[:lower:]"  | head -c 4)
 temp_name="$constant$logs"
 now=$(date +"-%b-%d-%y-%H%M%S")
 
-# log levels
-time=$(date +"%Y-%m-%d %H:%M:%S")
-info="INFO  "$time
-debug="DEBUG "$time
-warn="WARNING  "$time
-error="ERROR "$time
-
 ################################################################################
 # FUNCTIONS
 
@@ -83,10 +76,28 @@ function intro(){
   echo "  2. Verify passphrase"
   echo "  3. Unlock your volume"
   echo ""
-  echo "The connection will be  automatically closed."
-  echo ""
   echo "========================================================="
 }
+
+#____________________________________
+# Log levels:
+# DEBUG
+# INFO
+# WARNING
+# ERROR
+# usege: logs(loglevel, statement, logfile)
+
+# log levels
+time=$(date +"%Y-%m-%d %H:%M:%S")
+info="INFO  "$time
+debug="DEBUG "$time
+warn="WARNING  "$time
+error="ERROR "$time
+
+function logs_debug(){ echo -e "$debug [$STAT] $1" >> $LOGFILE 2>&1; }
+function logs_info(){ echo -e "$info [$STAT] $1" >> $LOGFILE 2>&1; }
+function logs_warning(){ echo -e "$warning [$STAT] $1" >> $LOGFILE 2>&1; }
+function logs_error(){ echo -e "$error [$STAT] $1" >> $LOGFILE 2>&1; }
 
 #____________________________________
 # Lock/UnLock Section
@@ -127,7 +138,7 @@ function lock(){
         # lock is stale, remove it and restart
         echo "$debug [$STAT] Removing fake lock file of nonexistant PID ${OTHERPID}" >&2
         rm -rf "${LOCKDIR}"
-        echo "$debug [$STAT] Restarting LUKS script" >&2
+        logs_debug 'Restarting LUKS script'
         exec "$0" "$@"
       else
         # lock is valid and OTHERPID is active - exit, we're locked!
@@ -200,19 +211,28 @@ function check_cryptsetup(){
 # Check volume 
 
 function check_vol(){
-  echo "$debug [$STAT] Check volume..." >> "$LOGFILE" 2>&1
+  logs_debug 'Check volume...'
 
-  if [ $(mount | grep -c $mountpoint) == 0 ]; then # grep -c counts recurrence number.
-      echo "$error [$STAT] Device not mounted, exiting!"
-      echo "$error [$STAT] Please check logfile: $LOGFILE"
-      echo "$error [$STAT] No device  mounted to $mountpoint:" >> "$LOGFILE" 2>&1
-      df -h >> "$LOGFILE" 2>&1
-      unlock # unlocking script instance
-      exit 1
-  else
+  if [ $(mount | grep -c $mountpoint) == 1 ]; then
+
     device=$(df -P $mountpoint | tail -1 | cut -d' ' -f 1)
-    echo "$debug [$STAT] Device name: $device" >> "$LOGFILE" 2>&1
+    logs_debug 'Device name: '$device
+
+  elif [ $(mount | grep -c $mountpoint) == 0 ]; then
+
+     if [[ -b $device ]]; then
+       logs_debug 'External volume on $device. Using it for encryption.'
+     else
+       logs_error 'Device not mounted, exiting!'
+       logs_error 'Please check logfile: '
+       logs_error 'No device  mounted to $mountpoint:'
+       df -h >> "$LOGFILE" 2>&1
+       unlock # unlocking script instance
+       exit 1
+     fi
+
   fi
+
 }
 
 #____________________________________
@@ -417,7 +437,7 @@ if [[ $(/usr/bin/id -u) -ne 0 ]]; then
 fi
 
 # Create lock file. Ensure only single instance running.
-lock >> "$LOGFILE" 2>&1
+lock "$@"
 
 # If running script with no arguments then loads defaults values.
 if [ $# -lt 1 ]; then
