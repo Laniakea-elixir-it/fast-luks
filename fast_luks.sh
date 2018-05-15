@@ -245,27 +245,24 @@ function check_vol(){
 # Umount volume
 
 function umount_vol(){
-  echo ""
-  echo "$info [$STAT] Unmounting device..."
+  logs_info "Umounting device."
   umount $mountpoint
-  echo "$info [$STAT] $device umounted, ready for encryption!"
+  logs_info "$device umounted, ready for encryption!"
 }
 
 #____________________________________
 function setup_device(){
-  echo ""
-  echo "$info [$STAT] Using $cipher_algorithm algorithm to luksformat the volume."
-  echo "\n$debug [$STAT] Start cryptsetup" >> "$LOGFILE" 2>&1
+  logs_info "Using $cipher_algorithm algorithm to luksformat the volume."
+  logs_debug "Start cryptsetup"
   info >> "$LOGFILE" 2>&1
-  echo "$debug [$STAT] cryptsetup full command:" >> "$LOGFILE" 2>&1 
-  echo "$debug [$STAT] cryptsetup -v --cipher $cipher_algorithm --key-size $keysize --hash $hash_algorithm --iter-time 2000 --use-urandom --verify-passphrase luksFormat $device --batch-mode" >> "$LOGFILE" 2>&1 
+  logs_debug "Cryptsetup full command:"
+  logs_debug "cryptsetup -v --cipher $cipher_algorithm --key-size $keysize --hash $hash_algorithm --iter-time 2000 --use-urandom --verify-passphrase luksFormat $device --batch-mode"
+
   cryptsetup -v --cipher $cipher_algorithm --key-size $keysize --hash $hash_algorithm --iter-time 2000 --use-urandom --verify-passphrase luksFormat $device --batch-mode
   ecode=$?
   if [ $ecode != 0 ]; then
-    ### start log
-    echo "$error [$STAT] Command cryptsetup failed! Mounting $device to $mountpoint again." >> "$LOGFILE" 2>&1 #TODO redirect exit code
-    ### end log
-    mount $device $mountpoint >> "$LOGFILE" 2>&1
+    logs_error "Command cryptsetup failed! Mounting $device to $mountpoint and exiting.." #TODO redirect exit code
+    mount $device $mountpoint
     unlock
     exit 1
   fi
@@ -438,7 +435,7 @@ function encrypt(){
 
 # Check if script is run as root
 if [[ $(/usr/bin/id -u) -ne 0 ]]; then
-    echo "$error [$STAT] Not running as root."
+    logs_error "Not running as root."
     exit 1
 fi
 
@@ -447,7 +444,7 @@ lock "$@"
 
 # If running script with no arguments then loads defaults values.
 if [ $# -lt 1 ]; then
-  echo -e "\n$error [$STAT] No inputs. Using defaults values:" >> "$LOGFILE" 2>&1
+  logs_warning "No inputs. Using defaults values."
   info >> "$LOGFILE" 2>&1
 fi
 
