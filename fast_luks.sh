@@ -518,8 +518,8 @@ if [[ $print_help = true ]]
            -m, --mountpoint		\tset mount point [default: /export]\n
            -f, --filesystem		\tset filesystem [default: ext4]\n
            --paranoic-mode		\twipe data after encryption procedure. This take time [default: false]\n
-           --non-interactive		\tnon-interactive mode, only command line [default: false]
-           --foregroun			\trun script in foreground [default: false]
+           --non-interactive		\tnon-interactive mode, only command line [default: false]\n
+           --foregroun			\t\trun script in foreground [default: false]\n
            --default			\t\tload default values\n"
     echo -e $usage
     logs_info "Just printing help."
