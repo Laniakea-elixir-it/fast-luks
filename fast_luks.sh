@@ -15,7 +15,7 @@
 # Otherwise it will use default $device and $mountpoint.
 
 STAT="fast-luks"
-LOGFILE="/tmp/luks$now.log"
+LOGFILE="/tmp/luks$(date +"-%b-%d-%y-%H%M%S").log"
 SUCCESS_FILE="/tmp/fast-luks.success"
 
 # Defaults
