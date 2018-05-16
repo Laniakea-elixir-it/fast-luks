@@ -27,7 +27,7 @@ cryptdev='crypt'
 mountpoint='/export'
 filesystem='ext4'
 
-paranoic=false
+paranoid=false
 non_interactive=false
 foreground=false
 
@@ -404,7 +404,7 @@ function encrypt(){
     (
       # Wipe data for security
       # WARNING This is going take time, depending on VM storage. Currently commented out
-      if [[ $paranoic == true ]]; then wipe_data >> "$LOGFILE" 2>&1; fi
+      if [[ $paranoid == true ]]; then wipe_data >> "$LOGFILE" 2>&1; fi
     
       # Create filesystem
       create_fs >> "$LOGFILE" 2>&1
@@ -423,7 +423,7 @@ function encrypt(){
 
     echo_info "Run script in foreground."
 
-    if [[ $paranoic == true ]]; then wipe_data; fi
+    if [[ $paranoid == true ]]; then wipe_data; fi
     create_fs
     mount_vol
     create_cyptdev_ini_file
@@ -473,7 +473,7 @@ do
 
     -f|--filesystem) filesystem="$2"; shift ;;
 
-    --paranoic-mode) paranoic=true;;
+    --paranoid-mode) paranoid=true;;
 
     # TODO implement non-interactive mode. Allow to pass password from command line.
     # TODO Currently it just avoid to print intro and deny random password generation.
@@ -517,7 +517,7 @@ if [[ $print_help = true ]]
            -e, --cryptdev		\tset crypt device [default: cryptdev]\n
            -m, --mountpoint		\tset mount point [default: /export]\n
            -f, --filesystem		\tset filesystem [default: ext4]\n
-           --paranoic-mode		\twipe data after encryption procedure. This take time [default: false]\n
+           --paranoid-mode		\twipe data after encryption procedure. This take time [default: false]\n
            --non-interactive		\tnon-interactive mode, only command line [default: false]\n
            --foregroun			\t\trun script in foreground [default: false]\n
            --default			\t\tload default values\n"
