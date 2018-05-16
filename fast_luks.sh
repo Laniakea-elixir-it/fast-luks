@@ -101,10 +101,10 @@ function echo_warn(){ echo -e "$warn [$STAT] $1"; }
 function echo_error(){ echo -e "$error [$STAT] $1"; }
 
 # Logs functions
-function logs_debug(){ echo_debug $1 >> $LOGFILE 2>&1; }
-function logs_info(){ echo_info $1 >> $LOGFILE 2>&1; }
-function logs_warn(){ echo_warn $1 >> $LOGFILE 2>&1; }
-function logs_error(){ echo_error $1 >> $LOGFILE 2>&1; }
+function logs_debug(){ echo_debug "$1" >> $LOGFILE 2>&1; }
+function logs_info(){ echo_info "$1" >> $LOGFILE 2>&1; }
+function logs_warn(){ echo_warn "$1" >> $LOGFILE 2>&1; }
+function logs_error(){ echo_error "$1" >> $LOGFILE 2>&1; }
 
 #____________________________________
 # Lock/UnLock Section
@@ -176,7 +176,7 @@ function unlock(){
 function info(){
   echo_debug "LUKS header information for $device"
   echo_debug "Cipher algorithm: ${cipher_algorithm}"
-  echo_debug "Hash algorithm${hash_algorithm}"
+  echo_debug "Hash algorithm ${hash_algorithm}"
   echo_debug "Keysize: ${keysize}"
   echo_debug "Device: ${device}"
   echo_debug "Crypt device: ${cryptdev}"
