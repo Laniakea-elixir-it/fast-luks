@@ -9,18 +9,29 @@ Defaults
 
 Optional arguments
 ------------------
-``-h, --help``: Show help
-``-c, --cipher                 \t\tset cipher algorithm [default: aes-xts-plain64]\n
-``-k, --keysize                \t\tset key size [default: 256]\n
-``-a, --hash_algorithm         \tset hash algorithm used for key derivation\n
-``-d, --device                 \t\tset device [default: /dev/vdb]\n
-``-e, --cryptdev               \tset crypt device [default: cryptdev]\n
-``-m, --mountpoint             \tset mount point [default: /export]\n
-``-f, --filesystem             \tset filesystem [default: ext4]\n
-``--paranoid-mode              \twipe data after encryption procedure. This take time [default: false]\n
-``--non-interactive            \tnon-interactive mode, only command line [default: false]\n
-          --foregroun                  \t\trun script in foreground [default: false]\n
-           --default                    \t\tload default values\n"
+``-h, --help``: Show help.
+
+``-c, --cipher``: set cipher algorithm [default: aes-xts-plain64].
+
+``-k, --keysize``: set key size [default: 256].
+
+``-a, --hash_algorithm``: set hash algorithm used for key derivation [default: sha256].
+
+``-d, --device``: set device [default: /dev/vdb].
+
+``-e, --cryptdev``: set crypt device [default: cryptdev].
+
+``-m, --mountpoint``: set mount point [default: /export].
+
+``-f, --filesystem``: set filesystem [default: ext4].
+
+``--paranoid-mode``: wipe data after encryption procedure. This take time [default: false].
+
+``--non-interactive``: non-interactive mode, only command line [default: false].
+
+``--foreground``: run script in foreground [default: false].
+
+``--default``: load default values.
 
 Usage
 -----
