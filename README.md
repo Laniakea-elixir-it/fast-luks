@@ -1,11 +1,9 @@
 Fast-LUKS
 =========
 
-LUKS (Linux Unified Key Setup) script for Storage encryption Repository
+LUKS (Linux Unified Key Setup) script for Storage encryption development Repository
 
-
-Defaults
---------
+Defaults value should not be changed. Changes are reccommended only to experts.
 
 Optional arguments
 ------------------
@@ -33,8 +31,33 @@ Optional arguments
 
 ``--default``: load default values.
 
+Defaults
+--------
+``cipher_algorithm``: aes-xts-plain64
+
+``keysize``: 256
+
+``hash_algorithm``: sha256
+
+``device``: /dev/vdb
+
+``cryptdev``: crypt [this is randomly generated]
+
+``mountpoint``: /export
+
+``filesystem``: ext4
+
+``paranoid``: false
+
+``non_interactive``: false
+
+``foreground``: false
+
 Usage
 -----
+```
+# ./fast-luks.sh --defaults
+```
 
 References
 ----------
@@ -47,5 +70,7 @@ GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gp
 Credits
 -------
 Please find the original script here:
+
 https://github.com/JohnTroony/LUKS-OPs/blob/master/luks-ops.sh
+
 All credits to John Troon.
