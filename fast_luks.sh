@@ -519,7 +519,7 @@ if [[ $print_help = true ]]
            -f, --filesystem		\tset filesystem [default: ext4]\n
            --paranoid-mode		\twipe data after encryption procedure. This take time [default: false]\n
            --non-interactive		\tnon-interactive mode, only command line [default: false]\n
-           --foregroun			\t\trun script in foreground [default: false]\n
+           --foreground			\t\trun script in foreground [default: false]\n
            --default			\t\tload default values\n"
     echo -e $usage
     logs_info "Just printing help."
