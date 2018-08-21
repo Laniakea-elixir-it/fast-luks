@@ -18,10 +18,6 @@
 ################################################################################
 # VARIABLES
 
-constant="luks_"
-cryptdev=$(cat < /dev/urandom | tr -dc "[:lower:]"  | head -c 8)
-logs=$(cat < /dev/urandom | tr -dc "[:lower:]"  | head -c 4)    
-temp_name="$constant$logs"
 now=$(date +"-%b-%d-%y-%H%M%S")
 
 ################################################################################
@@ -145,6 +141,11 @@ function unlock(){
   # the trap on "0" (EXIT) from above will be triggered by this trap's "exit" command!
   trap 'echo_debug "Killed by signal."  >> "$LOGFILE" 2>&1 
         exit ${ENO_RECVSIG}' 1 2 3 15
+}
+
+#___________________________________
+function create_random_cryptdev_name() {
+  cryptdev=$(cat < /dev/urandom | tr -dc "[:lower:]"  | head -c 8)
 }
 
 #___________________________________
@@ -341,8 +342,8 @@ function create_cryptdev_ini_file(){
   echo "filesystem = ${filesystem}" >> ${luks_cryptdev_file}
 
   # Update Log file
-  dmsetup info /dev/mapper/${cryptdev}
-  cryptsetup luksDump $device
+  dmsetup info /dev/mapper/${cryptdev} >> "$LOGFILE" 2>&1
+  cryptsetup luksDump $device >> "$LOGFILE" 2>&1
 }
 
 #____________________________________
@@ -361,4 +362,34 @@ function load_default_config(){
   else
     logs_info "No defaults.conf file found. Loading built-in variables."
   fi
+}
+
+#____________________________________
+# Read ini file
+function cfg.parser ()
+# http://theoldschooldevops.com/2008/02/09/bash-ini-parser/
+{
+        IFS=$'\n' && ini=( $(<$1) ) # convert to line-array
+        ini=( ${ini[*]//;*/} )      # remove comments with ;
+        ini=( ${ini[*]//\#*/} )     # remove comments with #
+        ini=( ${ini[*]/\        =/=} )  # remove tabs before =
+        ini=( ${ini[*]/=\       /=} )   # remove tabs be =
+        ini=( ${ini[*]/\ =\ /=} )   # remove anything with a space around =
+        ini=( ${ini[*]/#[/\}$'\n'cfg.section.} ) # set section prefix
+        ini=( ${ini[*]/%]/ \(} )    # convert text2function (1)
+        ini=( ${ini[*]/=/=\( } )    # convert item to array
+        ini=( ${ini[*]/%/ \)} )     # close array parenthesis
+        ini=( ${ini[*]/%\\ \)/ \\} ) # the multiline trick
+        ini=( ${ini[*]/%\( \)/\(\) \{} ) # convert text2function (2)
+        ini=( ${ini[*]/%\} \)/\}} ) # remove extra parenthesis
+        ini[0]="" # remove first element
+        ini[${#ini[*]} + 1]='}'    # add the last brace
+        eval "$(echo "${ini[*]}")" # eval the result
+}
+
+function read_ini_file(){
+
+  cfg.parser $cryptdev_ini_file
+  cfg.section.luks
+
 }

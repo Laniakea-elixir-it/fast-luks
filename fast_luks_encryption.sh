@@ -3,12 +3,14 @@
 STAT="fast-luks-encryption"
 LOGFILE="/tmp/luks_encryption.log"
 #LOGFILE="/tmp/luks_encryption$(date +"-%b-%d-%y-%H%M%S").log"
-SUCCESS_FILE="/tmp/fast-luks.success"
+SUCCESS_FILE="/tmp/fast-luks-encryption.success"
 
+#____________________________________
 # lockfile configuration
 LOCKDIR=/var/run/fast_luks
 PIDFILE=${LOCKDIR}/fast-luks-encryption.pid
 
+#____________________________________
 # Load functions
 if [[ -f ./fast_luks_lib.sh ]]; then
   source ./fast_luks_lib.sh
@@ -17,21 +19,31 @@ else
   exit 1
 fi
 
+#____________________________________
 # Check if script is run as root
 if [[ $(/usr/bin/id -u) -ne 0 ]]; then
     echo_error "Not running as root."
     exit 1
 fi
 
+#____________________________________
 # Create lock file. Ensure only single instance running.
 lock "$@"
 
+#____________________________________
 # Start Log file
 logs_info "Start log file: $(date +"%b-%d-%y-%H%M%S")"
 
+#____________________________________
 # Loads defaults values then take user custom parameters.
 load_default_config
 
+#____________________________________
+# Crypt device name is changed to a random value, to avoid rewrite
+# unless a specific name is passed through -e/--cryptdev option
+create_random_cryptdev_name
+
+#____________________________________
 # Parse CLI options
 while [ $# -gt 0 ]
 do
@@ -78,6 +90,7 @@ if [[ -n "$1" ]]; then
     tail -1 $1
 fi
 
+#____________________________________
 # Print Help
 if [[ $print_help = true ]]; then
   echo ""
@@ -90,7 +103,7 @@ if [[ $print_help = true ]]; then
          -k, --keysize                \t\tset key size [default: 256]\n
          -a, --hash_algorithm         \tset hash algorithm used for key derivation\n
          -d, --device                 \t\tset device [default: /dev/vdb]\n
-         -e, --cryptdev               \tset crypt device [default: cryptdev]\n
+         -e, --cryptdev               \tset crypt device name, otherwise it is randomnly assigned [default: cryptdev]\n
          -m, --mountpoint             \tset mount point [default: /export]\n
          -f, --filesystem             \tset filesystem [default: ext4]\n
          --paranoid-mode              \twipe data after encryption procedure. This take time [default: false]\n
@@ -105,13 +118,14 @@ elif [[ ! -v print_help ]]; then
     info >> "$LOGFILE" 2>&1
 fi
 
+#____________________________________
 # Print intro
 if [[ $non_interactive == false ]]; then intro; fi
 
 #____________________________________
 #____________________________________
 #____________________________________
-# Encrypt volume
+# VOLUME ENCRYPTION
 
 # Check if the required applications are installed
 check_cryptsetup
@@ -130,6 +144,9 @@ open_device
 
 # Check status
 encryption_status
+
+# Create ini file
+create_cryptdev_ini_file
 
 # Unlock once done.
 unlock >> "$LOGFILE" 2>&1
