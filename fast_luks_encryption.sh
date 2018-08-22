@@ -1,9 +1,9 @@
 #!/bin/bash
 
 STAT="fast-luks-encryption"
-LOGFILE="/tmp/luks_encryption.log"
-#LOGFILE="/tmp/luks_encryption$(date +"-%b-%d-%y-%H%M%S").log"
-SUCCESS_FILE="/tmp/fast-luks-encryption.success"
+if [[ ! -v LOGFILE ]]; then LOGFILE="/tmp/luks_encryption.log"; fi
+if [[ ! -v SUCCESS_FILE_DIR ]]; SUCCESS_FILE_DIR=/var/run; fi
+SUCCESS_FILE="${SUCCESS_FILE_DIR}/fast-luks-encryption.success"
 
 #____________________________________
 # lockfile configuration

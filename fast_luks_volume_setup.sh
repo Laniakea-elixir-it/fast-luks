@@ -1,9 +1,9 @@
 #!/bin/bash
 
 STAT="fast-luks-volume-setup"
-LOGFILE="/tmp/luks_volume_setup.log"
-#LOGFILE="/tmp/luks_encryption$(date +"-%b-%d-%y-%H%M%S").log"
-SUCCESS_FILE="/tmp/fast-luks-volume-setup.success"
+if [[ ! -v LOGFILE ]]; then LOGFILE="/tmp/luks_volume_setup.log"; fi
+if [[ ! -v SUCCESS_FILE_DIR ]]; SUCCESS_FILE_DIR=/var/run; fi
+SUCCESS_FILE="${SUCCESS_FILE_DIR}/fast-luks-volume-setup.success"
 
 # lockfile configuration
 LOCKDIR=/var/run/fast_luks
