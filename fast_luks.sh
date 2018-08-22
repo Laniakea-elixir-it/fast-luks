@@ -9,6 +9,15 @@ SUCCESS_FILE="$SUCCESS_FILE_DIR/fast-luks.success"
 LOCKDIR=/var/run/fast_luks
 PIDFILE=${LOCKDIR}/fast-luks.pid
 
+#____________________________________
+# Load functions
+if [[ -f ./fast_luks_lib.sh ]]; then
+  source ./fast_luks_lib.sh
+else
+  echo '[Error] No fast_luks_lib.sh file found.'
+  exit 1
+fi
+
 # Check if script is run as root
 if [[ $(/usr/bin/id -u) -ne 0 ]]; then
     echo_error "Not running as root."
