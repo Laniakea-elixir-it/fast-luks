@@ -2,7 +2,7 @@
 
 STAT="fast-luks-volume-setup"
 if [[ ! -v LOGFILE ]]; then LOGFILE="/tmp/luks_volume_setup.log"; fi
-if [[ ! -v SUCCESS_FILE_DIR ]]; SUCCESS_FILE_DIR=/var/run; fi
+if [[ ! -v SUCCESS_FILE_DIR ]]; then SUCCESS_FILE_DIR=/var/run; fi
 SUCCESS_FILE="${SUCCESS_FILE_DIR}/fast-luks-volume-setup.success"
 
 # lockfile configuration

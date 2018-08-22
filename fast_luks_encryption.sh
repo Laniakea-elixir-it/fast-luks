@@ -2,7 +2,7 @@
 
 STAT="fast-luks-encryption"
 if [[ ! -v LOGFILE ]]; then LOGFILE="/tmp/luks_encryption.log"; fi
-if [[ ! -v SUCCESS_FILE_DIR ]]; SUCCESS_FILE_DIR=/var/run; fi
+if [[ ! -v SUCCESS_FILE_DIR ]]; then SUCCESS_FILE_DIR=/var/run; fi
 SUCCESS_FILE="${SUCCESS_FILE_DIR}/fast-luks-encryption.success"
 
 #____________________________________
