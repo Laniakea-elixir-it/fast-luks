@@ -106,9 +106,7 @@ if [[ $print_help = true ]]; then
          -e, --cryptdev               \tset crypt device name, otherwise it is randomnly assigned [default: cryptdev]\n
          -m, --mountpoint             \tset mount point [default: /export]\n
          -f, --filesystem             \tset filesystem [default: ext4]\n
-         --paranoid-mode              \twipe data after encryption procedure. This take time [default: false]\n
          --non-interactive            \tnon-interactive mode, only command line [default: false]\n
-         --foreground                 \t\trun script in foreground [default: false]\n
          --default                    \t\tload default values from defaults.conf\n"
   echo -e $usage
   logs_info "Just printing help."
