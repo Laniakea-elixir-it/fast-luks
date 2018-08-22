@@ -1,13 +1,11 @@
 #!/bin/bash
 
-STAT="fast-luks"
-LOGFILE="/tmp/luks_encryption$(date +"-%b-%d-%y-%H%M%S").log"
-SUCCESS_FILE_DIR=/var/run
-SUCCESS_FILE="$SUCCESS_FILE_DIR/fast-luks.success"
+STAT="fast-luks-interface"
+export LOGFILE="/tmp/fast_luks$(date +"-%b-%d-%y-%H%M%S").log"
 
-# lockfile configuration
-LOCKDIR=/var/run/fast_luks
-PIDFILE=${LOCKDIR}/fast-luks.pid
+script_name=$0
+script_full_path=$(dirname "$0")
+cd $script_full_path
 
 #____________________________________
 # Load functions
@@ -18,18 +16,18 @@ else
   exit 1
 fi
 
+#____________________________________
 # Check if script is run as root
 if [[ $(/usr/bin/id -u) -ne 0 ]]; then
     echo_error "Not running as root."
     exit 1
 fi
 
-# Create lock file. Ensure only single instance running.
-lock "$@"
-
+#____________________________________
 # Start Log file
 logs_info "Start log file: $(date +"%b-%d-%y-%H%M%S")"
 
+#____________________________________
 # Parse CLI options
 while [ $# -gt 0 ]
 do
@@ -121,6 +119,3 @@ if [[ $foreground == false ]]; then
 elif [[ $foreground == true ]]; then
   ./fast_luks_volume_setup.sh
 fi
-
-# Unlock once done.
-unlock >> "$LOGFILE" 2>&1
