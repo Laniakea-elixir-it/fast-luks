@@ -1,21 +1,13 @@
 #!/bin/bash
 
-STAT="fast-luks-encryption"
-LOGFILE="/tmp/luks_encryption.log"
-#LOGFILE="/tmp/luks_encryption$(date +"-%b-%d-%y-%H%M%S").log"
-SUCCESS_FILE="/tmp/fast-luks.success"
+STAT="fast-luks"
+LOGFILE="/tmp/luks_encryption$(date +"-%b-%d-%y-%H%M%S").log"
+SUCCESS_FILE_DIR=/var/run
+SUCCESS_FILE="$SUCCESS_FILE_DIR/fast-luks.success"
 
 # lockfile configuration
 LOCKDIR=/var/run/fast_luks
-PIDFILE=${LOCKDIR}/fast-luks-encryption.pid
-
-# Load functions
-if [[ -f ./fast_luks_lib.sh ]]; then
-  source ./fast_luks_lib.sh
-else
-  echo '[Error] No fast_luks_lib.sh file found.'
-  exit 1
-fi
+PIDFILE=${LOCKDIR}/fast-luks.pid
 
 # Check if script is run as root
 if [[ $(/usr/bin/id -u) -ne 0 ]]; then
@@ -28,9 +20,6 @@ lock "$@"
 
 # Start Log file
 logs_info "Start log file: $(date +"%b-%d-%y-%H%M%S")"
-
-# Loads defaults values then take user custom parameters.
-load_default_config
 
 # Parse CLI options
 while [ $# -gt 0 ]
@@ -111,25 +100,18 @@ if [[ $non_interactive == false ]]; then intro; fi
 #____________________________________
 #____________________________________
 #____________________________________
-# Encrypt volume
+# MAIN SCRIPT
 
-# Check if the required applications are installed
-check_cryptsetup
+# VOLUME ENCRYPTION
+./fast_luks_encryption.sh
 
-# Check which virtual volume is mounted to /export
-check_vol
-
-# Umount volume.
-umount_vol
-
-# Setup a new dm-crypt device
-setup_device
-
-# Create mapping
-open_device
-
-# Check status
-encryption_status
+# VOLUME SETUP
+if [[ $foreground == false ]]; then
+  # Run this in background.
+  nohup ./fast_luks_volume_setup.sh &
+elif [[ $foreground == true ]]; then
+  ./fast_luks_volume_setup.sh
+fi
 
 # Unlock once done.
 unlock >> "$LOGFILE" 2>&1
