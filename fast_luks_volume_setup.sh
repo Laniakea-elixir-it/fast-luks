@@ -1,13 +1,13 @@
 #!/bin/bash
 
 STAT="fast-luks-volume-setup"
-LOGFILE="/tmp/luks_encryption.log"
+LOGFILE="/tmp/luks_volume_setup.log"
 #LOGFILE="/tmp/luks_encryption$(date +"-%b-%d-%y-%H%M%S").log"
-SUCCESS_FILE="/tmp/fast-luks.success"
+SUCCESS_FILE="/tmp/fast-luks-volume-setup.success"
 
 # lockfile configuration
 LOCKDIR=/var/run/fast_luks
-PIDFILE=${LOCKDIR}/fast-luks-encryption.pid
+PIDFILE=${LOCKDIR}/fast-luks-volume-setup.pid
 
 # Load functions
 if [[ -f ./fast_luks_lib.sh ]]; then
@@ -30,7 +30,13 @@ lock "$@"
 logs_info "Start log file: $(date +"%b-%d-%y-%H%M%S")"
 
 # Loads defaults values then take user custom parameters.
+# The only variables needed are:
+# - if paranoid mode is enabled
+# - luks-cryptdev.ini file location
 load_default_config
+
+# Read luks-cryptdev.ini file to setup all variables (mostly device mapper).
+read_ini_file luks_cryptdev_file 
 
 # Parse CLI options
 while [ $# -gt 0 ]
@@ -45,8 +51,6 @@ do
     -f|--filesystem) filesystem="$2"; shift ;;
 
     --paranoid-mode) paranoid=true;;
-
-    --foreground) foreground=true;; # run script in foregrond, allowing to use it on ansible playbooks.
 
     --default) DEFAULT=YES;;
 
@@ -73,11 +77,10 @@ if [[ $print_help = true ]]; then
          optionals argumets:\n
          -h, --help                   \t\tshow this help text\n
          -d, --device                 \t\tset device [default: /dev/vdb]\n
-         -e, --cryptdev               \tset crypt device [default: cryptdev]\n
+         -e, --cryptdev               \tset crypt device. This is randomly generated during the encryption procedure, read from the luks-crypt.ini file, but still settable. [default: cryptdev]\n
          -m, --mountpoint             \tset mount point [default: /export]\n
          -f, --filesystem             \tset filesystem [default: ext4]\n
          --paranoid-mode              \twipe data after encryption procedure. This take time [default: false]\n
-         --foreground                 \t\trun script in foreground [default: false]\n
          --default                    \t\tload default values from defaults.conf\n"
   echo -e $usage
   logs_info "Just printing help."
@@ -87,8 +90,26 @@ elif [[ ! -v print_help ]]; then
     info >> "$LOGFILE" 2>&1
 fi
 
-# Print intro
-if [[ $non_interactive == false ]]; then intro; fi
+#____________________________________
+#____________________________________
+#____________________________________
+# VOLUME SETUP
+
+# Wipe data for security
+# WARNING This is going take time, depending on VM storage. Currently commented out
+if [[ $paranoid == true ]]; then wipe_data; fi
+
+# Create filesystem
+create_fs
+
+# Mount volume
+mount_vol
+
+# Update ini file
+create_cryptdev_ini_file
+
+# LUKS encryption finished. Print end dialogue.
+end_encrypt_procedure
 
 # Unlock once done.
 unlock >> "$LOGFILE" 2>&1

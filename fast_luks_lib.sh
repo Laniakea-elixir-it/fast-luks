@@ -286,22 +286,22 @@ function encryption_status(){
 # To prevent cryptographic attacks or unwanted file recovery, this data is ideally indistinguishable from data later written by dm-crypt.
 
 function wipe_data(){
-  echo ""
-  echo_info "Wiping disk data by overwriting the entire drive with random data"
-  echo_info "This might take time depending on the size & your machine!"
+  echo_info "Paranoid mode selected. Wiping disk."
+  logs_info "Wiping disk data by overwriting the entire drive with random data."
+  logs_info "This might take time depending on the size & your machine!"
 
   #dd if=/dev/zero of=/dev/mapper/${cryptdev} bs=1M  status=progress
-  pv -tpreb /dev/zero | dd of=/dev/mapper/${cryptdev} bs=1M status=progress;
+  { pv -tpreb /dev/zero | dd of=/dev/mapper/${cryptdev} bs=1M status=progress; } >> "$LOGFILE" 2>&1
 
-  echo_info "Block file /dev/mapper/${cryptdev} created."
-  echo_info "Wiping done."
+  logs_info "Block file /dev/mapper/${cryptdev} created."
+  logs_info "Wiping done."
 }
 
 #____________________________________
 function create_fs(){
-  echo ""
-  echo_info "Creating filesystem..."
-  mkfs.${filesystem} /dev/mapper/${cryptdev} #Do not redirect mkfs, otherwise no interactive mode!
+  echo_info "Creating filesystem."
+  logs_info "Creating ${filesystem} filesystem on /dev/mapper/${cryptdev}"
+  mkfs.${filesystem} /dev/mapper/${cryptdev} >> "$LOGFILE" 2>&1 #Do not redirect mkfs, otherwise no interactive mode!
   if [ $? != 0 ]; then
     echo_error "While creating ${filesystem} filesystem. Please check logs: $LOGFILE"
     echo_error "Command mkfs failed!"
@@ -312,9 +312,9 @@ function create_fs(){
 
 #____________________________________
 function mount_vol(){
-  echo ""
-  echo_info "Mounting encrypted device..."
-  mount /dev/mapper/${cryptdev} $mountpoint
+  echo_info "Mounting encrypted device."
+  logs_info "Mounting /dev/mapper/${cryptdev} to ${mountpoint}"
+  mount /dev/mapper/${cryptdev} $mountpoint >> "$LOGFILE" 2>&1
   df -Hv >> "$LOGFILE" 2>&1
 }
 
@@ -348,7 +348,6 @@ function create_cryptdev_ini_file(){
 
 #____________________________________
 function end_encrypt_procedure(){
-  echo ""
   # send signal to unclok waiting condition for automation software (e.g Ansible)
   echo "LUKS encryption completed." > $SUCCESS_FILE # WARNING DO NOT MODFIFY THIS LINE, THIS IS A CONTROL STRING FOR ANSIBLE
   echo_info "SUCCESSFUL."
@@ -389,7 +388,7 @@ function cfg.parser ()
 
 function read_ini_file(){
 
-  cfg.parser $cryptdev_ini_file
+  cfg.parser ${luks_cryptdev_file}
   cfg.section.luks
 
 }
