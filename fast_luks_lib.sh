@@ -360,6 +360,17 @@ function load_default_config(){
     source ./defaults.conf
   else
     logs_info "No defaults.conf file found. Loading built-in variables."
+    cipher_algorithm='aes-xts-plain64'
+    keysize='256'
+    hash_algorithm='sha256'
+    device='/dev/vdb'
+    cryptdev='crypt'
+    mountpoint='/export'
+    filesystem='ext4'
+    paranoid=false
+    non_interactive=false
+    foreground=false
+    luks_cryptdev_file='/tmp/luks-cryptdev.ini'
   fi
 }
 
