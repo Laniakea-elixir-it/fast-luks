@@ -156,9 +156,9 @@ else
     ./fast_luks_encryption.sh -c $cipher_algorithm -k $keysize -a $hash_algorithm -d $device -e $cryptdev_new -m $mountpoint
     if [[ $foreground == false ]]; then
       if [[ -v paranoid ]]; then
-        nohup ./fast_luks_volume_setup.sh -d $device -e $cryptdev_new -m $mountpoint -f $filesystem --paranoid-mode &>/dev/null
+        nohup ./fast_luks_volume_setup.sh -d $device -e $cryptdev_new -m $mountpoint -f $filesystem --paranoid-mode &>$LOGFILE &
       else
-        nohup ./fast_luks_volume_setup.sh -d $device -e $cryptdev_new -m $mountpoint -f $filesystem &>/dev/null
+        nohup ./fast_luks_volume_setup.sh -d $device -e $cryptdev_new -m $mountpoint -f $filesystem &>$LOGFILE &
       fi # end paranoid if
     elif [[ $foreground == true ]]; then
       if [[ -v paranoid ]]; then
@@ -171,9 +171,9 @@ else
     ./fast_luks_encryption.sh -c $cipher_algorithm -k $keysize -a $hash_algorithm -d $device -m $mountpoint
     if [[ $foreground == false ]]; then
       if [[ -v paranoid ]]; then
-        nohup ./fast_luks_volume_setup.sh -d $device -m $mountpoint -f $filesystem --paranoid-mode &>/dev/null
+        nohup ./fast_luks_volume_setup.sh -d $device -m $mountpoint -f $filesystem --paranoid-mode &>$LOGFILE &
       else
-        nohup ./fast_luks_volume_setup.sh -d $device -m $mountpoint -f $filesystem &>/dev/null
+        nohup ./fast_luks_volume_setup.sh -d $device -m $mountpoint -f $filesystem &>$LOGFILE &
       fi # end paranoid if
     elif [[ $foreground == true ]]; then
       if [[ -v paranoid ]]; then
