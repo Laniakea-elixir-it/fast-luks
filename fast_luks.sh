@@ -1,7 +1,22 @@
 #!/bin/bash
+# Bash script for managing LUKS volumes in Linux:
+# You can create a virtual encrypted Linux FS volume from a file block.
+# Helps you mount and unmount LUKS partitions.
+#
+# Author: Marco Tangaro
+# Mail: ma.tangaro@ibiom.cnr.it
+# Home institution: IBIOM-CNR, ELIXIR-ITALY
+#
+# Please find the original script here:
+# https://github.com/JohnTroony/LUKS-OPs/blob/master/luks-ops.sh
+# All credits to John Troon.
+#
+# The script is able to detect the $device only if it is mounted.
+# Otherwise it will use default $device and $mountpoint.
 
 STAT="fast-luks-interface"
 export LOGFILE="/tmp/fast_luks$(date +"-%b-%d-%y-%H%M%S").log"
+#export LOGFILE="/tmp/fast_luks.log"
 
 script_name=$0
 script_full_path=$(dirname "$0")
@@ -28,7 +43,16 @@ fi
 logs_info "Start log file: $(date +"%b-%d-%y-%H%M%S")"
 
 #____________________________________
+# Loads defaults values then take user custom parameters.
+load_default_config
+
+#____________________________________
 # Parse CLI options
+
+# Store CLI parameters
+Npar=$#
+
+# CLI options
 while [ $# -gt 0 ]
 do
   case $1 in
@@ -40,7 +64,7 @@ do
 
     -d|--device) device="$2"; shift ;;
 
-    -e|--cryptdev) cryptdev="$2"; shift ;;
+    -e|--cryptdev) cryptdev_new="$2"; shift ;;
 
     -m|--mountpoint) mountpoint="$2"; shift ;;
 
@@ -64,7 +88,7 @@ do
 
     -*) echo >&2 "usage: $0 [--help] [print all options]"
         exit 1;;
-    *) DEFAULT=YES;; # terminate while loop
+    *) export DEFAULT=YES;; # terminate while loop
   esac
   shift
 done
@@ -101,21 +125,62 @@ elif [[ ! -v print_help ]]; then
     info >> "$LOGFILE" 2>&1
 fi
 
-# Print intro
-if [[ $non_interactive == false ]]; then intro; fi
-
 #____________________________________
 #____________________________________
 #____________________________________
 # MAIN SCRIPT
 
-# VOLUME ENCRYPTION
-./fast_luks_encryption.sh
+# No arguments supplied
+if [[ $Npar -eq 0 ]]; then
+  ./fast_luks_encryption.sh
+  if [[ $foreground == false ]]; then
+    # Run this in background.
+    nohup ./fast_luks_volume_setup.sh &>/dev/null
+  elif [[ $foreground == true ]]; then
+    ./fast_luks_volume_setup.sh
+  fi
 
-# VOLUME SETUP
-if [[ $foreground == false ]]; then
-  # Run this in background.
-  nohup ./fast_luks_volume_setup.sh &
-elif [[ $foreground == true ]]; then
-  ./fast_luks_volume_setup.sh
-fi
+# Run with defaults parameters
+elif [[ $DEFAULT == "YES" ]]; then 
+  ./fast_luks_encryption.sh --default
+  if [[ $foreground == false ]]; then
+    # Run this in background.
+    nohup ./fast_luks_volume_setup.sh --default &>/dev/null
+  elif [[ $foreground == true ]]; then
+    ./fast_luks_volume_setup.sh --default
+  fi
+
+# Run with CLI parameters
+else
+  if [[ -v cryptdev_new ]]; then
+    ./fast_luks_encryption.sh -c $cipher_algorithm -k $keysize -a $hash_algorithm -d $device -e $cryptdev_new -m $mountpoint
+    if [[ $foreground == false ]]; then
+      if [[ -v paranoid ]]; then
+        nohup ./fast_luks_volume_setup.sh -d $device -e $cryptdev_new -m $mountpoint -f $filesystem --paranoid-mode &>/dev/null
+      else
+        nohup ./fast_luks_volume_setup.sh -d $device -e $cryptdev_new -m $mountpoint -f $filesystem &>/dev/null
+      fi # end paranoid if
+    elif [[ $foreground == true ]]; then
+      if [[ -v paranoid ]]; then
+        ./fast_luks_volume_setup.sh -d $device -e $cryptdev_new -m $mountpoint -f $filesystem --paranoid-mode
+      else
+        ./fast_luks_volume_setup.sh -d $device -e $cryptdev_new -m $mountpoint -f $filesystem
+      fi # end paranoid if
+    fi # end foreground if
+  else
+    ./fast_luks_encryption.sh -c $cipher_algorithm -k $keysize -a $hash_algorithm -d $device -m $mountpoint
+    if [[ $foreground == false ]]; then
+      if [[ -v paranoid ]]; then
+        nohup ./fast_luks_volume_setup.sh -d $device -m $mountpoint -f $filesystem --paranoid-mode &>/dev/null
+      else
+        nohup ./fast_luks_volume_setup.sh -d $device -m $mountpoint -f $filesystem &>/dev/null
+      fi # end paranoid if
+    elif [[ $foreground == true ]]; then
+      if [[ -v paranoid ]]; then
+        ./fast_luks_volume_setup.sh -d $device -m $mountpoint -f $filesystem --paranoid-mode 
+      else
+        ./fast_luks_volume_setup.sh -d $device -m $mountpoint -f $filesystem
+      fi # end paranoid if
+    fi # end foreground if
+  fi # end cryptdev name if
+fi # end argument if
