@@ -354,6 +354,13 @@ function end_encrypt_procedure(){
 }
 
 #____________________________________
+function end_volume_setup_procedure(){
+  # send signal to unclok waiting condition for automation software (e.g Ansible)
+  echo "Volume setup completed." > $SUCCESS_FILE # WARNING DO NOT MODFIFY THIS LINE, THIS IS A CONTROL STRING FOR ANSIBLE
+  echo_info "SUCCESSFUL."
+}
+
+#____________________________________
 function load_default_config(){
   if [[ -f ./defaults.conf ]]; then
     logs_info "Loading default configuration from defaults.conf"

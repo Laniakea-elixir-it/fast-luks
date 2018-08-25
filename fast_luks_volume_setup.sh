@@ -108,8 +108,8 @@ mount_vol
 # Update ini file
 create_cryptdev_ini_file
 
-# LUKS encryption finished. Print end dialogue.
-end_encrypt_procedure
+# Volume setup finished. Print end dialogue.
+end_volume_setup_procedure
 
 # Unlock once done.
 unlock >> "$LOGFILE" 2>&1

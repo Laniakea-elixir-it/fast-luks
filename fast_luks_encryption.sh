@@ -146,5 +146,8 @@ encryption_status
 # Create ini file
 create_cryptdev_ini_file
 
+# LUKS encryption finished. Print end dialogue.
+end_encrypt_procedure
+
 # Unlock once done.
 unlock >> "$LOGFILE" 2>&1
