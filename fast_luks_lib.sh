@@ -290,8 +290,8 @@ function wipe_data(){
   logs_info "Wiping disk data by overwriting the entire drive with random data."
   logs_info "This might take time depending on the size & your machine!"
 
-  #dd if=/dev/zero of=/dev/mapper/${cryptdev} bs=1M  status=progress
-  { pv -tpreb /dev/zero | dd of=/dev/mapper/${cryptdev} bs=1M status=progress; } >> "$LOGFILE" 2>&1
+  dd if=/dev/zero of=/dev/mapper/${cryptdev} bs=1M  status=progress
+  #{ pv -tpreb /dev/zero | dd of=/dev/mapper/${cryptdev} bs=1M status=progress; } >> "$LOGFILE" 2>&1
 
   logs_info "Block file /dev/mapper/${cryptdev} created."
   logs_info "Wiping done."

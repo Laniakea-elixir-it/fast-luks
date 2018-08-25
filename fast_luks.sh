@@ -175,12 +175,8 @@ else
     ./fast_luks_encryption.sh -c $cipher_algorithm -k $keysize -a $hash_algorithm -d $device -m $mountpoint
     if [[ $foreground == false ]]; then
       if [[ -v paranoid && $paranoid == true ]]; then
-        echo_info "run nohup"
         echo_info "The volume setup script will be run in background."
         nohup ./fast_luks_volume_setup.sh -d $device -m $mountpoint -f $filesystem --paranoid-mode &>$LOGFILE &
-        echo_info "post nohup run, sleeping"
-        sleep 30
-        echo_info "stop sleep"
       else
         echo_info "The volume setup script will be run in background."
         nohup ./fast_luks_volume_setup.sh -d $device -m $mountpoint -f $filesystem &>$LOGFILE &
@@ -194,3 +190,6 @@ else
     fi # end foreground if
   fi # end cryptdev name if
 fi # end argument if
+
+# Wait a little script module start!
+sleep 7
