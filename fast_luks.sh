@@ -135,7 +135,8 @@ if [[ $Npar -eq 0 ]]; then
   ./fast_luks_encryption.sh
   if [[ $foreground == false ]]; then
     # Run this in background.
-    nohup ./fast_luks_volume_setup.sh &>/dev/null
+    echo_info "The volume setup script will be run in background."
+    nohup ./fast_luks_volume_setup.sh &>$LOGFILE &
   elif [[ $foreground == true ]]; then
     ./fast_luks_volume_setup.sh
   fi
@@ -145,7 +146,8 @@ elif [[ $DEFAULT == "YES" ]]; then
   ./fast_luks_encryption.sh --default
   if [[ $foreground == false ]]; then
     # Run this in background.
-    nohup ./fast_luks_volume_setup.sh --default &>/dev/null
+    echo_info "The volume setup script will be run in background."
+    nohup ./fast_luks_volume_setup.sh --default &>$LOGFILE &
   elif [[ $foreground == true ]]; then
     ./fast_luks_volume_setup.sh --default
   fi
@@ -156,8 +158,10 @@ else
     ./fast_luks_encryption.sh -c $cipher_algorithm -k $keysize -a $hash_algorithm -d $device -e $cryptdev_new -m $mountpoint
     if [[ $foreground == false ]]; then
       if [[ -v paranoid && $paranoid == true ]]; then
+        echo_info "The volume setup script will be run in background."
         nohup ./fast_luks_volume_setup.sh -d $device -e $cryptdev_new -m $mountpoint -f $filesystem --paranoid-mode &>$LOGFILE &
       else
+        echo_info "The volume setup script will be run in background."
         nohup ./fast_luks_volume_setup.sh -d $device -e $cryptdev_new -m $mountpoint -f $filesystem &>$LOGFILE &
       fi # end paranoid if
     elif [[ $foreground == true ]]; then
@@ -171,8 +175,10 @@ else
     ./fast_luks_encryption.sh -c $cipher_algorithm -k $keysize -a $hash_algorithm -d $device -m $mountpoint
     if [[ $foreground == false ]]; then
       if [[ -v paranoid && $paranoid == true ]]; then
+        echo_info "The volume setup script will be run in background."
         nohup ./fast_luks_volume_setup.sh -d $device -m $mountpoint -f $filesystem --paranoid-mode &>$LOGFILE &
       else
+        echo_info "The volume setup script will be run in background."
         nohup ./fast_luks_volume_setup.sh -d $device -m $mountpoint -f $filesystem &>$LOGFILE &
       fi # end paranoid if
     elif [[ $foreground == true ]]; then
