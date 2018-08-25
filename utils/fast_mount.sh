@@ -1,0 +1,12 @@
+#!/bin/bash
+
+USER=$1
+GROUP=$USER
+DEVICE=$2
+MOUNTPOINT=$3
+
+mkfs.ext4 $DEVICE
+mount $DEVICE  $MOUNTPOINT
+chown $USER:$GROUP $MOUNTPOINT
+
+df -h
