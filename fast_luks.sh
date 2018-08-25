@@ -178,7 +178,9 @@ else
         echo_info "run nohup"
         echo_info "The volume setup script will be run in background."
         nohup ./fast_luks_volume_setup.sh -d $device -m $mountpoint -f $filesystem --paranoid-mode &>$LOGFILE &
-        echo_info "post nohup run"
+        echo_info "post nohup run, sleeping"
+        sleep 30
+        echo_info "stop sleep"
       else
         echo_info "The volume setup script will be run in background."
         nohup ./fast_luks_volume_setup.sh -d $device -m $mountpoint -f $filesystem &>$LOGFILE &
