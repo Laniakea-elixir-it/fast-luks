@@ -191,5 +191,5 @@ else
   fi # end cryptdev name if
 fi # end argument if
 
-# Wait a little script module start!
-sleep 7
+# Wait a little script volume setup  module start!
+sleep 5
