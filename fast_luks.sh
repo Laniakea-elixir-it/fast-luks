@@ -191,5 +191,8 @@ else
   fi # end cryptdev name if
 fi # end argument if
 
-# Wait a little script volume setup  module start!
-sleep 5
+# Wait volume setup script start
+# the pid file name is hard-coded in fast_luks_volume_setup.sh
+while ! test -f "/var/run/fast_luks/fast-luks-volume-setup.pid"; do
+  sleep 1
+done
