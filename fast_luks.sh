@@ -22,6 +22,9 @@ script_name=$0
 script_full_path=$(dirname "$0")
 cd $script_full_path
 
+# Force applications to use the default language for output
+export LC_ALL=C
+
 #____________________________________
 # Load functions
 if [[ -f ./fast_luks_lib.sh ]]; then
@@ -136,6 +139,7 @@ if [[ $Npar -eq 0 ]]; then
   ec=$?
   if [[ $ec != 0 ]]; then
     echo_error "Please try again."
+    unset LC_ALL
     exit $ec;
   fi  
   if [[ $foreground == false ]]; then
@@ -152,6 +156,7 @@ elif [[ $DEFAULT == "YES" ]]; then
   ec=$?
   if [[ $ec != 0 ]]; then
     echo_error "Please try again."
+    unset LC_ALL
     exit $ec;
   fi
   if [[ $foreground == false ]]; then
@@ -169,6 +174,7 @@ else
     ec=$?
     if [[ $ec != 0 ]]; then
       echo_error "Please try again."
+      unset LC_ALL
       exit $ec;
     fi
     if [[ $foreground == false ]]; then
@@ -191,6 +197,7 @@ else
     ec=$?
     if [[ $ec != 0 ]]; then
       echo_error "Please try again."
+      unset LC_ALL
       exit $ec;
     fi
     if [[ $foreground == false ]]; then
@@ -210,6 +217,8 @@ else
     fi # end foreground if
   fi # end cryptdev name if
 fi # end argument if
+
+unset LC_ALL
 
 # Wait volume setup script start
 # the pid file name is hard-coded in fast_luks_volume_setup.sh
