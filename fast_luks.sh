@@ -133,6 +133,8 @@ fi
 # No arguments supplied
 if [[ $Npar -eq 0 ]]; then
   ./fast_luks_encryption.sh
+  ec=$?
+  if [[ $ec != 0 ]]; then exit $ec; fi
   if [[ $foreground == false ]]; then
     # Run this in background.
     echo_info "The volume setup script will be run in background."
@@ -144,6 +146,8 @@ if [[ $Npar -eq 0 ]]; then
 # Run with defaults parameters
 elif [[ $DEFAULT == "YES" ]]; then 
   ./fast_luks_encryption.sh --default
+  ec=$?
+  if [[ $ec != 0 ]]; then exit $ec; fi
   if [[ $foreground == false ]]; then
     # Run this in background.
     echo_info "The volume setup script will be run in background."
@@ -156,6 +160,8 @@ elif [[ $DEFAULT == "YES" ]]; then
 else
   if [[ -v cryptdev_new ]]; then
     ./fast_luks_encryption.sh -c $cipher_algorithm -k $keysize -a $hash_algorithm -d $device -e $cryptdev_new -m $mountpoint
+    ec=$?
+    if [[ $ec != 0 ]]; then exit $ec; fi
     if [[ $foreground == false ]]; then
       if [[ -v paranoid && $paranoid == true ]]; then
         echo_info "The volume setup script will be run in background."
@@ -173,6 +179,8 @@ else
     fi # end foreground if
   else
     ./fast_luks_encryption.sh -c $cipher_algorithm -k $keysize -a $hash_algorithm -d $device -m $mountpoint
+    ec=$?
+    if [[ $ec != 0 ]]; then exit $ec; fi
     if [[ $foreground == false ]]; then
       if [[ -v paranoid && $paranoid == true ]]; then
         echo_info "The volume setup script will be run in background."
