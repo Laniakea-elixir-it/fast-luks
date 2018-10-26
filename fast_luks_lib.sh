@@ -263,10 +263,18 @@ function setup_device(){
   cryptsetup -v --cipher $cipher_algorithm --key-size $keysize --hash $hash_algorithm --iter-time 2000 --use-urandom --verify-passphrase luksFormat $device --batch-mode
   ecode=$?
   if [ $ecode != 0 ]; then
-    logs_error "Command cryptsetup failed! Mounting $device to $mountpoint and exiting.." #TODO redirect exit code
+    # Cryptsetup returns 0 on success and a non-zero value on error.
+    # Error codes are:
+    # 1 wrong parameters
+    # 2 no permission (bad passphrase)
+    # 3 out of memory
+    # 4 wrong device specified
+    # 5 device already exists or device is busy.
+    logs_error "Command cryptsetup failed with exit code $ecode! Mounting $device to $mountpoint and exiting.." #TODO redirect exit code
+    if [ $code == 2 ]; then echo_error "Please try again"; fi
     mount $device $mountpoint
     unlock
-    exit 1
+    exit $ecode
   fi
 }
 
