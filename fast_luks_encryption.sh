@@ -131,6 +131,9 @@ check_cryptsetup
 # Check which virtual volume is mounted to /export
 check_vol
 
+# Check if the volume is already encrypted
+lsblk_check
+
 # Umount volume.
 umount_vol
 

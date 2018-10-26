@@ -225,6 +225,22 @@ function check_vol(){
 }
 
 #____________________________________
+# Check if the volume is already encrypted.
+# If yes, skip the encryption
+
+function lsblk_check(){
+
+  lsblk -o NAME,FSTYPE | grep "$device" | awk '{print $2}' | grep "crypto_LUKS" &> /dev/null
+  ec_lsblk_check=$?
+  if [[ $ec_lsblk_check == 0]]; then
+    logs_info "The volume is already encrypted."
+    unlock
+    exit 0
+  fi
+
+}
+
+#____________________________________
 # Umount volume
 
 function umount_vol(){
