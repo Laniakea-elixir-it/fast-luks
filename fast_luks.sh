@@ -226,7 +226,7 @@ function build_volume_setup_cmd(){
 cmd_encryption='./fast_luks_encryption.sh'
 cmd_volume_setup='./fast_luks_volume_setup.sh'
 
-# Build commands and run it
+# Build commands and run them
 build_luks_ecryption_cmd
 eval $cmd_encryption
 encryption_script_exit $?
