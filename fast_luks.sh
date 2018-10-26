@@ -129,6 +129,14 @@ elif [[ ! -v print_help ]]; then
 fi
 
 #____________________________________
+# Cryptsetup returns 0 on success and a non-zero value on error.
+# Error codes are:
+# 1 wrong parameters
+# 2 no permission (bad passphrase)
+# 3 out of memory
+# 4 wrong device specified
+# 5 device already exists or device is busy.
+
 function encryption_script_exit(){
   ec=$1
   if [[ $ec != 0 ]]; then
