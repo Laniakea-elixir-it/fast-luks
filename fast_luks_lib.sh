@@ -270,8 +270,8 @@ function setup_device(){
     # 3 out of memory
     # 4 wrong device specified
     # 5 device already exists or device is busy.
-    logs_error "Command cryptsetup failed with exit code $ecode! Mounting $device to $mountpoint and exiting.." #TODO redirect exit code
-    if [ $code == 2 ]; then echo_error "Please try again."; fi
+    logs_error "Command cryptsetup failed with exit code $ecode! Mounting $device to $mountpoint and exiting." #TODO redirect exit code
+    if [[ $ecode == 2 ]]; then echo_error "Bad passphrase. Please try again."; fi
     mount $device $mountpoint
     unlock
     exit $ecode
@@ -286,7 +286,7 @@ function open_device(){
     cryptsetup luksOpen $device $cryptdev
     openec=$?
     if [[ $openec != 0 ]]; then
-      if [ $openec == 2 ]; then echo_error "Please try again."; fi
+      if [[ $openec == 2 ]]; then echo_error "Bad passphrase. Please try again."; fi
       unlock # unlocking script instance
       exit $openec
     fi
