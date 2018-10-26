@@ -234,6 +234,7 @@ eval $cmd_encryption
 encryption_script_exit $?
 
 build_volume_setup_cmd
+if [[ $foreground == false ]]; then echo_info "Volume setup running in background."; fi
 eval $cmd_volume_setup
 
 unset LC_ALL
