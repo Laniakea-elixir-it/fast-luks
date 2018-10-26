@@ -222,11 +222,9 @@ function build_volume_setup_cmd(){
 #____________________________________
 # MAIN SCRIPT
 
-
 # Set two global variables for encryption and volume setup commands.
 cmd_encryption='./fast_luks_encryption.sh'
 cmd_volume_setup='./fast_luks_volume_setup.sh'
-
 
 # Build commands and run it
 build_luks_ecryption_cmd
