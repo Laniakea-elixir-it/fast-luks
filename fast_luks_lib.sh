@@ -230,6 +230,7 @@ function check_vol(){
 
 function lsblk_check(){
 
+  logs_debug "Checking if the volume is already encrypted."
   lsblk -o NAME,FSTYPE | grep "$device" | awk '{print $2}' | grep "crypto_LUKS" &> /dev/null
   ec_lsblk_check=$?
   if [[ $ec_lsblk_check == 0 ]]; then
