@@ -276,6 +276,11 @@ function open_device(){
   echo_info "Open LUKS volume."
   if [ ! -b /dev/mapper/${cryptdev} ]; then
     cryptsetup luksOpen $device $cryptdev
+    openec=$?
+    if [[ $openec != 0 ]]; then
+      unlock # unlocking script instance
+      exit 1
+    fi
   else
     echo_error "Crypt device already exists! Please check logs: $LOGFILE"
     logs_error "Unable to luksOpen device. "
