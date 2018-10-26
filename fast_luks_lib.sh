@@ -235,8 +235,9 @@ function lsblk_check(){
   ec_lsblk_check=$?
   if [[ $ec_lsblk_check == 0 ]]; then
     logs_info "The volume is already encrypted."
-    unlock
-    exit 0
+    return 1
+  else
+    return 0
   fi
 
 }
