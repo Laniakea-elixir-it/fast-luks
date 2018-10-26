@@ -129,94 +129,105 @@ elif [[ ! -v print_help ]]; then
 fi
 
 #____________________________________
+function encryption_script_exit(){
+  ec=$1
+  if [[ $ec != 0 ]]; then
+    echo_error "Please try again."
+    unset LC_ALL
+    exit $ec;
+  fi
+}
+
+#____________________________________
+# Build luks encryption command for different options
+function build_luks_ecryption_cmd(){
+
+  # set local cmd variable
+  cmd=$cmd_encryption
+
+  if [[ $Npar -eq 0 ]]; then
+
+    # without options the script goes background.
+    :
+
+  # if defaults are set, return defaults
+  elif [[ $DEFAULT == "YES" ]]; then
+
+    cmd="$cmd --default"
+  
+  else
+  
+    cmd="$cmd -c $cipher_algorithm -k $keysize -a $hash_algorithm -d $device -m $mountpoint"
+
+    if [[ -v cryptdev_new ]]; then cmd="$cmd -e $cryptdev_new"; fi
+
+  fi
+
+  # finally assign cmd to cmd_encryption
+  cmd_encryption=$cmd
+
+}
+
+#____________________________________
+# Build volume setup command for different options
+
+function build_volume_setup_cmd(){
+
+  # set local cmd variable
+  cmd=$cmd_volume_setup
+
+  if [[ $Npar -eq 0 ]]; then
+
+    # without options the script goes background.
+    :
+
+  elif [[ $Npar -eq 1 && $foreground == true ]]; then
+
+    # with only the foreground option enabled, the next conditionals are skipped
+    # so no nohup and no background.
+    # Nothing to do
+    :
+
+  # if defaults are set, return defaults
+  elif [[ $DEFAULT == "YES" ]]; then
+    cmd="$cmd  --default"
+
+  else
+
+    cmd="$cmd -d $device -m $mountpoint -f $filesystem"
+
+    if [[ -v cryptdev_new ]]; then cmd="$cmd -e $cryptdev_new"; fi
+
+    if [[ -v paranoid && $paranoid == true ]]; then cmd="$cmd --paranoid-mode"; fi
+
+  fi
+
+
+  if [[ $foreground == false ]]; then cmd="nohup $cmd &>$LOGFILE &"; fi
+
+  # finally assign cmd to cmd_volume_setup
+  cmd_volume_setup=$cmd
+
+}
+
+#____________________________________
 #____________________________________
 #____________________________________
 # MAIN SCRIPT
 
-# No arguments supplied
-if [[ $Npar -eq 0 ]]; then
-  ./fast_luks_encryption.sh
-  ec=$?
-  if [[ $ec != 0 ]]; then
-    echo_error "Please try again."
-    unset LC_ALL
-    exit $ec;
-  fi  
-  if [[ $foreground == false ]]; then
-    # Run this in background.
-    echo_info "The volume setup script will be run in background."
-    nohup ./fast_luks_volume_setup.sh &>$LOGFILE &
-  elif [[ $foreground == true ]]; then
-    ./fast_luks_volume_setup.sh
-  fi
 
-# Run with defaults parameters
-elif [[ $DEFAULT == "YES" ]]; then 
-  ./fast_luks_encryption.sh --default
-  ec=$?
-  if [[ $ec != 0 ]]; then
-    echo_error "Please try again."
-    unset LC_ALL
-    exit $ec;
-  fi
-  if [[ $foreground == false ]]; then
-    # Run this in background.
-    echo_info "The volume setup script will be run in background."
-    nohup ./fast_luks_volume_setup.sh --default &>$LOGFILE &
-  elif [[ $foreground == true ]]; then
-    ./fast_luks_volume_setup.sh --default
-  fi
+# Set two global variables for encryption and volume setup commands.
+cmd_encryption='./fast_luks_encryption.sh'
+cmd_volume_setup='./fast_luks_volume_setup.sh'
 
-# Run with CLI parameters
-else
-  if [[ -v cryptdev_new ]]; then
-    ./fast_luks_encryption.sh -c $cipher_algorithm -k $keysize -a $hash_algorithm -d $device -e $cryptdev_new -m $mountpoint
-    ec=$?
-    if [[ $ec != 0 ]]; then
-      echo_error "Please try again."
-      unset LC_ALL
-      exit $ec;
-    fi
-    if [[ $foreground == false ]]; then
-      if [[ -v paranoid && $paranoid == true ]]; then
-        echo_info "The volume setup script will be run in background."
-        nohup ./fast_luks_volume_setup.sh -d $device -e $cryptdev_new -m $mountpoint -f $filesystem --paranoid-mode &>$LOGFILE &
-      else
-        echo_info "The volume setup script will be run in background."
-        nohup ./fast_luks_volume_setup.sh -d $device -e $cryptdev_new -m $mountpoint -f $filesystem &>$LOGFILE &
-      fi # end paranoid if
-    elif [[ $foreground == true ]]; then
-      if [[ -v paranoid && $paranoid == true ]]; then
-        ./fast_luks_volume_setup.sh -d $device -e $cryptdev_new -m $mountpoint -f $filesystem --paranoid-mode
-      else
-        ./fast_luks_volume_setup.sh -d $device -e $cryptdev_new -m $mountpoint -f $filesystem
-      fi # end paranoid if
-    fi # end foreground if
-  else
-    ./fast_luks_encryption.sh -c $cipher_algorithm -k $keysize -a $hash_algorithm -d $device -m $mountpoint
-    ec=$?
-    if [[ $ec != 0 ]]; then
-      echo_error "Please try again."
-      unset LC_ALL
-      exit $ec;
-    fi
-    if [[ $foreground == false ]]; then
-      if [[ -v paranoid && $paranoid == true ]]; then
-        echo_info "The volume setup script will be run in background."
-        nohup ./fast_luks_volume_setup.sh -d $device -m $mountpoint -f $filesystem --paranoid-mode &>$LOGFILE &
-      else
-        echo_info "The volume setup script will be run in background."
-        nohup ./fast_luks_volume_setup.sh -d $device -m $mountpoint -f $filesystem &>$LOGFILE &
-      fi # end paranoid if
-    elif [[ $foreground == true ]]; then
-      if [[ -v paranoid && $paranoid == true ]]; then
-        ./fast_luks_volume_setup.sh -d $device -m $mountpoint -f $filesystem --paranoid-mode 
-      else
-        ./fast_luks_volume_setup.sh -d $device -m $mountpoint -f $filesystem
-      fi # end paranoid if
-    fi # end foreground if
-  fi # end cryptdev name if
-fi # end argument if
+
+# Build commands and run it
+build_luks_ecryption_cmd
+eval $cmd_encryption
+encryption_script_exit $?
+
+build_volume_setup_cmd
+eval $cmd_volume_setup
 
 unset LC_ALL
 
