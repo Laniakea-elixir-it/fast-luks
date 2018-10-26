@@ -134,11 +134,17 @@ check_vol
 # Check if the volume is already encrypted
 lsblk_check
 
-# Umount volume.
-umount_vol
+# If the system is already encrypted we skip the encryption procedure
+lsblk_ec=$?
+if [[ $lsblk_ec == 0 ]]; then
 
-# Setup a new dm-crypt device
-setup_device
+  # Umount volume.
+  umount_vol
+
+  # Setup a new dm-crypt device
+  setup_device
+
+fi
 
 # Create mapping
 open_device
