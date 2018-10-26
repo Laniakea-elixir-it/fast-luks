@@ -132,7 +132,6 @@ fi
 function encryption_script_exit(){
   ec=$1
   if [[ $ec != 0 ]]; then
-    echo_error "Please try again."
     unset LC_ALL
     exit $ec;
   fi
