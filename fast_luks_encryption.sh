@@ -60,11 +60,11 @@ do
 
     -m|--mountpoint) mountpoint="$2"; shift ;;
 
-    -p|--passphrase) passphrase="$2"; shift ;;  #TODO to be implemented passphrase option for web-UI
-
     -f|--filesystem) filesystem="$2"; shift ;;
 
     --paranoid-mode) paranoid=true;;
+
+    --foreground) foreground=true;; # run script in foreground, allowing to use it on ansible playbooks.
 
     # TODO implement non-interactive mode. Allow to pass password from command line.
     # TODO Currently it just avoid to print intro and deny random password generation.
@@ -72,7 +72,9 @@ do
     # TODO create a "--passphrase" option to inject password.
     --non-interactive) non_interactive=true;;
 
-    --foreground) foreground=true;; # run script in foregrond, allowing to use it on ansible playbooks.
+   -p|--passphrase) passphrase="$2"; shift ;;
+
+    -v|--verify-passphrase) passphrase_confirmation="$2"; shift ;;
 
     --default) DEFAULT=YES;;
 
@@ -157,6 +159,9 @@ create_cryptdev_ini_file
 
 # LUKS encryption finished. Print end dialogue.
 end_encrypt_procedure
+
+# unset passphrase var
+uset passphrase
 
 # Unlock once done.
 unlock >> "$LOGFILE" 2>&1
