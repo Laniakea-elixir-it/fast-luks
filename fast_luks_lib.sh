@@ -303,14 +303,12 @@ function setup_device(){
       s3cret=$(create_random_secret)
       echo "Your random generated passphrase: $s3cret"
     fi
+    #TODO the password can't be longer 512 char
     # Start encryption procedure
-    echo "non interactive encryption"
-    #printf "$s3cret\n" | cryptsetup -v --cipher $cipher_algorithm --key-size $keysize --hash $hash_algorithm --iter-time 2000 --use-urandom luksFormat $device --batch-mode
-    echo "pasphrase: $s3cret"
+    printf "$s3cret\n" | cryptsetup -v --cipher $cipher_algorithm --key-size $keysize --hash $hash_algorithm --iter-time 2000 --use-urandom luksFormat $device --batch-mode
   else
     # Start standard encryption
-    echo "standard encryption"
-    #cryptsetup -v --cipher $cipher_algorithm --key-size $keysize --hash $hash_algorithm --iter-time 2000 --use-urandom --verify-passphrase luksFormat $device --batch-mode
+    cryptsetup -v --cipher $cipher_algorithm --key-size $keysize --hash $hash_algorithm --iter-time 2000 --use-urandom --verify-passphrase luksFormat $device --batch-mode
   fi
 
   ecode=$?
@@ -337,10 +335,8 @@ function open_device(){
   if [ ! -b /dev/mapper/${cryptdev} ]; then
     if $non_interactive; then
       printf "$s3cret\n" | cryptsetup luksOpen $device $cryptdev
-          echo "non interactive encryption"
     else
       cryptsetup luksOpen $device $cryptdev
-    echo "standard encryption"
     fi
     openec=$?
     if [[ $openec != 0 ]]; then
