@@ -266,15 +266,28 @@ function setup_device(){
   logs_debug "Cryptsetup full command:"
   logs_debug "cryptsetup -v --cipher $cipher_algorithm --key-size $keysize --hash $hash_algorithm --iter-time 2000 --use-urandom --verify-passphrase luksFormat $device --batch-mode"
 
-  if $non_interactive; then 
-    s3cret=$(create_random_secret)
-    echo "Random generated passphrase: $s3cret"
-    printf "$s3cret\n$s3cret\n" | cryptsetup -v --cipher $cipher_algorithm --key-size $keysize --hash $hash_algorithm --iter-time 2000 --use-urandom --verify-passphrase luksFormat $device --batch-mode
+  if $non_interactive; then
+    if [ -z "$create_random_secret" ]; then
+      if [ -z "$passphrase" ]; then logs_error "Missing passphrase!"; unlock; exit 1; fi
+      if [ -z "$passphrase_confirmation" ]; then logs_error "Missing confirmation passphrase!"; unlock; exit 1; fi
+      if [ "$passphrase" ==  "$passphrase_confirmation" ]; then
+        s3cret=$passphrase
+      else
+        echo_error "No matching passphrases!"
+        exit 1
+        unlock
+      fi
+    else
+      s3cret=$(create_random_secret)
+      echo "Your random generated passphrase: $s3cret"
+    fi
+    # Start encryption procedure
+    printf "$s3cret\n" | cryptsetup -v --cipher $cipher_algorithm --key-size $keysize --hash $hash_algorithm --iter-time 2000 --use-urandom luksFormat $device --batch-mode
   else
-    echo "no random"
+    # Start standard encryption
+    cryptsetup -v --cipher $cipher_algorithm --key-size $keysize --hash $hash_algorithm --iter-time 2000 --use-urandom --verify-passphrase luksFormat $device --batch-mode
   fi
 
-  #cryptsetup -v --cipher $cipher_algorithm --key-size $keysize --hash $hash_algorithm --iter-time 2000 --use-urandom --verify-passphrase luksFormat $device --batch-mode
   ecode=$?
   if [ $ecode != 0 ]; then
     # Cryptsetup returns 0 on success and a non-zero value on error.
