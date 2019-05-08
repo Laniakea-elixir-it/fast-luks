@@ -258,6 +258,14 @@ function create_random_secret(){
 }
 
 #____________________________________
+# Unset sensitive variables
+function unset_variables(){
+  unset passphrase
+  unset passphrase_confirmation
+  unset s3cret
+}
+
+#____________________________________
 function setup_device(){
   echo_info "Start the encryption procedure."
   logs_info "Using $cipher_algorithm algorithm to luksformat the volume."
@@ -267,25 +275,42 @@ function setup_device(){
   logs_debug "cryptsetup -v --cipher $cipher_algorithm --key-size $keysize --hash $hash_algorithm --iter-time 2000 --use-urandom --verify-passphrase luksFormat $device --batch-mode"
 
   if $non_interactive; then
-    if [ -z "$create_random_secret" ]; then
-      if [ -z "$passphrase" ]; then logs_error "Missing passphrase!"; unlock; exit 1; fi
-      if [ -z "$passphrase_confirmation" ]; then logs_error "Missing confirmation passphrase!"; unlock; exit 1; fi
+    if [ -z "$passphrase_length" ]; then
+      if [ -z "$passphrase" ]; then
+        echo_error "Missing passphrase!"
+        # unset passphrase var
+        unset_variables
+        unlock
+        exit 1
+      fi
+      if [ -z "$passphrase_confirmation" ]; then
+        echo_error "Missing confirmation passphrase!"
+        # unset passphrase var
+        unset_variables
+        unlock
+        exit 1
+      fi
       if [ "$passphrase" ==  "$passphrase_confirmation" ]; then
         s3cret=$passphrase
       else
         echo_error "No matching passphrases!"
-        exit 1
+        # unset passphrase var
+        unset_variables
         unlock
+        exit 1
       fi
     else
       s3cret=$(create_random_secret)
       echo "Your random generated passphrase: $s3cret"
     fi
     # Start encryption procedure
-    printf "$s3cret\n" | cryptsetup -v --cipher $cipher_algorithm --key-size $keysize --hash $hash_algorithm --iter-time 2000 --use-urandom luksFormat $device --batch-mode
+    echo "non interactive encryption"
+    #printf "$s3cret\n" | cryptsetup -v --cipher $cipher_algorithm --key-size $keysize --hash $hash_algorithm --iter-time 2000 --use-urandom luksFormat $device --batch-mode
+    echo "pasphrase: $s3cret"
   else
     # Start standard encryption
-    cryptsetup -v --cipher $cipher_algorithm --key-size $keysize --hash $hash_algorithm --iter-time 2000 --use-urandom --verify-passphrase luksFormat $device --batch-mode
+    echo "standard encryption"
+    #cryptsetup -v --cipher $cipher_algorithm --key-size $keysize --hash $hash_algorithm --iter-time 2000 --use-urandom --verify-passphrase luksFormat $device --batch-mode
   fi
 
   ecode=$?
@@ -310,7 +335,13 @@ function open_device(){
   echo ""
   echo_info "Open LUKS volume."
   if [ ! -b /dev/mapper/${cryptdev} ]; then
-    cryptsetup luksOpen $device $cryptdev
+    if $non_interactive; then
+      printf "$s3cret\n" | cryptsetup luksOpen $device $cryptdev
+          echo "non interactive encryption"
+    else
+      cryptsetup luksOpen $device $cryptdev
+    echo "standard encryption"
+    fi
     openec=$?
     if [[ $openec != 0 ]]; then
       if [[ $openec == 2 ]]; then echo_error "Bad passphrase. Please try again."; fi
