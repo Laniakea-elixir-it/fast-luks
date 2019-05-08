@@ -168,9 +168,7 @@ create_cryptdev_ini_file
 end_encrypt_procedure
 
 # unset passphrase var
-unset passphrase
-unset passphrase_confirmation
-unset s3cret
+unset_variables
 
 # Unlock once done.
 unlock >> "$LOGFILE" 2>&1
