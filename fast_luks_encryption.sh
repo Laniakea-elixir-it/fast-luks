@@ -70,11 +70,15 @@ do
     # TODO Currently it just avoid to print intro and deny random password generation.
     # TODO Allow to inject passphrase from command line (not secure)
     # TODO create a "--passphrase" option to inject password.
-    --non-interactive) non_interactive=true;;
+    -n|--non-interactive) non_interactive=true;;
 
-   -p|--passphrase) passphrase="$2"; shift ;;
+    -p|--passphrase) passphrase="$2"; shift ;;
 
     -v|--verify-passphrase) passphrase_confirmation="$2"; shift ;;
+
+    # Alternatively a random password is setup
+    # WARNING the random password is currently displayed on stdout 
+    -r|--random-passhrase-generation) passphrase_length="$2"; shift ;;
 
     --default) DEFAULT=YES;;
 
@@ -109,6 +113,9 @@ if [[ $print_help = true ]]; then
          -m, --mountpoint             \tset mount point [default: /export]\n
          -f, --filesystem             \tset filesystem [default: ext4]\n
          --non-interactive            \tnon-interactive mode, only command line [default: false]\n
+         -p, --passphrase             \tinsert the passphrase
+         -v, --verify-passphrase      \tverify passpharase\n
+         -r, --random-passhrase-generation \trandom password generation. No key file, the password is displayed on stdout, with the length provided by the user [INT]\m
          --default                    \t\tload default values from defaults.conf\n"
   echo -e $usage
   logs_info "Just printing help."

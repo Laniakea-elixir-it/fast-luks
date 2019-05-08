@@ -252,6 +252,12 @@ function umount_vol(){
 }
 
 #____________________________________
+# Passphrase Random generation
+function create_random_secret(){
+  cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w $passphrase_length | head -n 1
+}
+
+#____________________________________
 function setup_device(){
   echo_info "Start the encryption procedure."
   logs_info "Using $cipher_algorithm algorithm to luksformat the volume."
@@ -260,7 +266,15 @@ function setup_device(){
   logs_debug "Cryptsetup full command:"
   logs_debug "cryptsetup -v --cipher $cipher_algorithm --key-size $keysize --hash $hash_algorithm --iter-time 2000 --use-urandom --verify-passphrase luksFormat $device --batch-mode"
 
-  cryptsetup -v --cipher $cipher_algorithm --key-size $keysize --hash $hash_algorithm --iter-time 2000 --use-urandom --verify-passphrase luksFormat $device --batch-mode
+  if $non_interactive; then 
+    s3cret=$(create_random_secret)
+    echo "Random generated passphrase: $s3cret"
+    printf "$s3cret\n$s3cret\n" | cryptsetup -v --cipher $cipher_algorithm --key-size $keysize --hash $hash_algorithm --iter-time 2000 --use-urandom --verify-passphrase luksFormat $device --batch-mode
+  else
+    echo "no random"
+  fi
+
+  #cryptsetup -v --cipher $cipher_algorithm --key-size $keysize --hash $hash_algorithm --iter-time 2000 --use-urandom --verify-passphrase luksFormat $device --batch-mode
   ecode=$?
   if [ $ecode != 0 ]; then
     # Cryptsetup returns 0 on success and a non-zero value on error.
@@ -272,7 +286,7 @@ function setup_device(){
     # 5 device already exists or device is busy.
     logs_error "Command cryptsetup failed with exit code $ecode! Mounting $device to $mountpoint and exiting." #TODO redirect exit code
     if [[ $ecode == 2 ]]; then echo_error "Bad passphrase. Please try again."; fi
-    mount $device $mountpoint
+    #mount $device $mountpoint
     unlock
     exit $ecode
   fi
