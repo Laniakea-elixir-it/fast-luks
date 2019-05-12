@@ -302,8 +302,7 @@ function setup_device(){
     else
       s3cret=$(create_random_secret)
       echo "Your random generated passphrase: $s3cret"
-      yum install -y  mailx
-      echo " Your random generated passphrase: $s3cret" | /usr/bin/mail -r laniakea@elixir-italy.org -s "[luks] send luks password for testing purporse"  laniakea.testuser@gmail.com
+      send_debug_mail
     fi
     #TODO the password can't be longer 512 char
     # Start encryption procedure
@@ -497,4 +496,26 @@ function read_ini_file(){
   cfg.parser ${luks_cryptdev_file}
   cfg.section.luks
 
+}
+
+#____________________________________
+function send_debug_mail(){
+
+subject="[luks] send luks password for testing purpors"
+body="Your random generated passphrase: $s3cret"
+from="laniakea@elixir-italy.org"
+to="laniakea.testuser@gmail.com"
+
+  if [[ -r /etc/os-release ]]; then
+    . /etc/os-release
+    echo_info "$ID"
+    if [ "$ID" = "ubuntu" ]; then
+      echo_info "Placeholder. Unable to send mail!"
+    else
+      yum install -y mailx
+      echo $body | /usr/bin/mail -r $from -s $subject $to
+    fi
+  else
+    echo_info "Not running a distribution with /etc/os-release available."
+  fi
 }

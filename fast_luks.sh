@@ -15,8 +15,8 @@
 # Otherwise it will use default $device and $mountpoint.
 
 STAT="fast-luks-interface"
-export LOGFILE="/var/log/galaxy/fast_luks$(date +"-%b-%d-%y-%H%M%S").log"
-#export LOGFILE="/tmp/fast_luks.log"
+#export LOGFILE="/var/log/galaxy/fast_luks$(date +"-%b-%d-%y-%H%M%S").log"
+export LOGFILE="/tmp/fast_luks.log"
 
 script_name=$0
 script_full_path=$(dirname "$0")
