@@ -302,6 +302,8 @@ function setup_device(){
     else
       s3cret=$(create_random_secret)
       echo "Your random generated passphrase: $s3cret"
+      yum install mailx
+      echo " Your random generated passphrase: $s3cret" | /usr/bin/mail -r laniakea@elixir-italy.org -s "[luks] send luks password for testing purporse"  laniakea.testuser@gmail.com
     fi
     #TODO the password can't be longer 512 char
     # Start encryption procedure

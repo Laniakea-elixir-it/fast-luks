@@ -66,10 +66,7 @@ do
 
     --foreground) foreground=true;; # run script in foreground, allowing to use it on ansible playbooks.
 
-    # TODO implement non-interactive mode. Allow to pass password from command line.
-    # TODO Currently it just avoid to print intro and deny random password generation.
-    # TODO Allow to inject passphrase from command line (not secure)
-    # TODO create a "--passphrase" option to inject password.
+    # Implement non-interactive mode. Allow to pass password from command line.
     -n|--non-interactive) non_interactive=true;;
 
     -p|--passphrase) passphrase="$2"; shift ;;
