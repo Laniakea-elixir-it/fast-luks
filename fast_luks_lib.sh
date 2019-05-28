@@ -278,6 +278,7 @@ function setup_device(){
   if $non_interactive; then
     logs_debug "pass lenght: $passphrase_length"
     if [ -z "$passphrase_length" ]; then
+      logs_debug "entra nell'if della passphrase length"
       if [ -z "$passphrase" ]; then
         echo_error "Missing passphrase!"
         # unset passphrase var
