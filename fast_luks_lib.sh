@@ -306,7 +306,9 @@ function setup_device(){
     fi
     #TODO the password can't be longer 512 char
     # Start encryption procedure
+    logs_info "prima della criptazione"
     printf "$s3cret\n" | cryptsetup -v --cipher $cipher_algorithm --key-size $keysize --hash $hash_algorithm --iter-time 2000 --use-urandom luksFormat $device --batch-mode
+    logs_info "criptazione eseguita"
   else
     # Start standard encryption
     cryptsetup -v --cipher $cipher_algorithm --key-size $keysize --hash $hash_algorithm --iter-time 2000 --use-urandom --verify-passphrase luksFormat $device --batch-mode
