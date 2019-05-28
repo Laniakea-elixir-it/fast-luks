@@ -254,7 +254,9 @@ function umount_vol(){
 #____________________________________
 # Passphrase Random generation
 function create_random_secret(){
+  logs_debug "creo la passphrase"
   cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w $passphrase_length | head -n 1
+  logs_debug "la passpharase e: $passphrase_length"
 }
 
 #____________________________________
