@@ -276,6 +276,7 @@ function setup_device(){
   logs_debug "non_interactive: $non_interactive"
 
   if $non_interactive; then
+    logs_debug "pass lenght: $passphrase_length"
     if [ -z "$passphrase_length" ]; then
       if [ -z "$passphrase" ]; then
         echo_error "Missing passphrase!"
