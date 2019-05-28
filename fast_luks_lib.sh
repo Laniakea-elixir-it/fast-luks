@@ -303,6 +303,7 @@ function setup_device(){
         exit 1
       fi
     else
+      logs_debug "sto qua!"
       s3cret=$(create_random_secret)
       logs_debug "Your random generated passphrase: $s3cret"
       send_debug_mail
