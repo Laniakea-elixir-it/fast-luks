@@ -303,7 +303,7 @@ function setup_device(){
       fi
     else
       s3cret=$(create_random_secret)
-      echo "Your random generated passphrase: $s3cret"
+      logs_debug "Your random generated passphrase: $s3cret"
       send_debug_mail
     fi
     #TODO the password can't be longer 512 char
