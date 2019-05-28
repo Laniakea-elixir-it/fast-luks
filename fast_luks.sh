@@ -264,6 +264,10 @@ unset LC_ALL
 
 # Wait volume setup script start
 # the pid file name is hard-coded in fast_luks_volume_setup.sh
-while ! test -f "/var/run/fast_luks/fast-luks-volume-setup.pid"; do
-  sleep 1
-done
+# If the script is started in foreground, this is not needed.
+# The pid file is created and deleted before this step, so the script won't exit.
+if [[ $foreground == false ]]; then
+  while ! test -f "/var/run/fast_luks/fast-luks-volume-setup.pid"; do
+    sleep 1
+  done
+fi
