@@ -273,6 +273,7 @@ function setup_device(){
   info >> "$LOGFILE" 2>&1
   logs_debug "Cryptsetup full command:"
   logs_debug "cryptsetup -v --cipher $cipher_algorithm --key-size $keysize --hash $hash_algorithm --iter-time 2000 --use-urandom --verify-passphrase luksFormat $device --batch-mode"
+  logs_debug "non_interactive: $non_iteractive"
 
   if $non_interactive; then
     if [ -z "$passphrase_length" ]; then
