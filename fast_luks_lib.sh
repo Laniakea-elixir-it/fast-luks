@@ -254,9 +254,9 @@ function umount_vol(){
 #____________________________________
 # Passphrase Random generation
 function create_random_secret(){
-  logs_debug "creo la passphrase"
-  cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w $passphrase_length | head -n 1
-  logs_debug "la passpharase e: $passphrase_length"
+  #cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w $passphrase_length | head -n 1
+  #https://github.com/ansible/ansible/issues/12459
+  tr -d -c "a-zA-Z0-9" < /dev/urandom | head -c $passphrase_length
 }
 
 #____________________________________
@@ -275,12 +275,9 @@ function setup_device(){
   info >> "$LOGFILE" 2>&1
   logs_debug "Cryptsetup full command:"
   logs_debug "cryptsetup -v --cipher $cipher_algorithm --key-size $keysize --hash $hash_algorithm --iter-time 2000 --use-urandom --verify-passphrase luksFormat $device --batch-mode"
-  logs_debug "non_interactive: $non_interactive"
 
   if $non_interactive; then
-    logs_debug "pass lenght: $passphrase_length"
     if [ -z "$passphrase_length" ]; then
-      logs_debug "entra nell'if della passphrase length"
       if [ -z "$passphrase" ]; then
         echo_error "Missing passphrase!"
         # unset passphrase var
@@ -305,7 +302,6 @@ function setup_device(){
         exit 1
       fi
     else
-      logs_debug "sto qua!"
       create_random_secret
       s3cret=$(create_random_secret)
       logs_debug "Your random generated passphrase: $s3cret"
