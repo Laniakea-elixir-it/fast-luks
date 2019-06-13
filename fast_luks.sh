@@ -80,13 +80,21 @@ do
     # Implement non-interactive mode. Allow to pass password from command line.
     -n|--non-interactive) non_interactive=true;;
 
-    -p|--passphrase) passphrase="$2"; shift ;;
+    -p1|--passphrase) passphrase="$2"; shift ;;
 
-    -v|--verify-passphrase) passphrase_confirmation="$2"; shift ;;
+    -p2|--verify-passphrase) passphrase_confirmation="$2"; shift ;;
 
     # Alternatively a random password is setup
     # WARNING the random password is currently displayed on stdout 
     -r|--random-passhrase-generation) passphrase_length="$2"; shift ;;
+
+    -v|--vault-url) vault_url="$2"; shift ;;
+
+    -w|--wrapping-token) wrapping_token="$2"; shift ;;
+
+    -s|--secret-path) secret_path="$2"; shift ;;
+
+    --key) user_key="$2"; shift ;;
 
     --default) DEFAULT=YES;;
 
@@ -122,9 +130,13 @@ if [[ $print_help = true ]]; then
          --paranoid-mode              \twipe data after encryption procedure. This take time [default: false]\n
          --foreground                 \t\trun script in foreground [default: false]\n
          --non-interactive            \tnon-interactive mode, only command line [default: false]\n
-         -p, --passphrase             \tinsert the passphrase
-         -v, --verify-passphrase      \tverify passpharase\n
-         -r, --random-passhrase-generation \trandom password generation. No key file, the password is displayed on stdout, with the length provided by the user [INT]\m
+         -p1, --passphrase             \tinsert the passphrase
+         -p2, --verify-passphrase      \tverify passpharase\n
+         -r, --random-passhrase-generation \trandom password generation. No key file, the password is displayed on stdout, with the length provided by the user [INT]\n
+         -v, --vault-url              \tVault endpoint\n
+         -w, --wrapping-token         \tWrapping Token\n
+         -p, --secret-path            \tSecret path on vault\n
+         --key                        \tVault user key name\n
          --default                    \t\tload default values from defaults.conf\n"
   echo -e $usage
   logs_info "Just printing help."
@@ -171,10 +183,13 @@ function build_luks_ecryption_cmd(){
   else
 
     if [[ -v non_interactive && $non_interactive == true ]]; then
+
       cmd="$cmd -n"
+
       if [[ -v passphrase ]]; then cmd="$cmd -p $passphrase"; fi
       if [[ -v passphrase_confirmation ]]; then cmd="$cmd -p $passphrase_confirmation"; fi
       if [[ -v passphrase_length ]]; then cmd="$cmd -r $passphrase_length"; fi
+
     fi
   
     if [[ -v _userdefined_cipher_algorithm ]]; then cmd="$cmd -c $_userdefined_cipher_algorithm"; fi
@@ -188,6 +203,17 @@ function build_luks_ecryption_cmd(){
     if [[ -v _userdefined_mountpoint ]]; then cmd="$cmd -m $_userdefined_mountpoint"; fi
 
     if [[ -v _userdefined_cryptdev ]]; then cmd="$cmd -e $_userdefined_cryptdev"; fi
+
+    # Vault integration
+    if [[ -v vault_url ]]; then
+
+      if [[ ! -v wrapping_token ]]; then echo_error "Wrapping token undefined"; fi
+      if [[ ! -v secret_path ]]; then echo_error "Secret path undefined"; fi
+      if [[ ! -v user_key ]]; then echo_error "Key undefined"; fi
+
+      cmd="$cmd -v $vault_url -w $wrapping_token -s $secret_path --key $user_key"
+
+    fi
 
   fi
 

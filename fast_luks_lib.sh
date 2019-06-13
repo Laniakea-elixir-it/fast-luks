@@ -79,6 +79,24 @@ function logs_info(){ echo_info "$1" >> $LOGFILE 2>&1; }
 function logs_warn(){ echo_warn "$1" >> $LOGFILE 2>&1; }
 function logs_error(){ echo_error "$1" >> $LOGFILE 2>&1; }
 
+#________________________________
+# Get Distribution
+# Ubuntu and centos currently supported
+
+DISTNAME=''
+
+if [[ -r /etc/os-release ]]; then
+    . /etc/os-release
+    logs_info "$ID"
+    if [ "$ID" = "ubuntu" ]; then
+      DISTNAME='ubuntu'
+    else
+      DISTNAME='centos'
+    fi
+else
+    logs_warn "Not running a distribution with /etc/os-release available"
+fi
+
 #____________________________________
 # Lock/UnLock Section
 # http://wiki.bash-hackers.org/howto/mutex
@@ -165,18 +183,12 @@ function info(){
 # Install cryptsetup
 
 function install_cryptsetup(){
-  if [[ -r /etc/os-release ]]; then
-    . /etc/os-release
-    echo_info "$ID"
-    if [ "$ID" = "ubuntu" ]; then
-      echo_info "Distribution: Ubuntu. Using apt."
-      apt-get install -y cryptsetup pv
-    else
-      echo_info "Distribution: CentOS. Using yum."
-      yum install -y cryptsetup-luks pv
-    fi
+  if [ "$DISTNAME" = "ubuntu" ]; then
+    echo_info "Distribution: Ubuntu. Using apt."
+    apt-get install -y cryptsetup pv
   else
-    echo_info "Not running a distribution with /etc/os-release available."
+    echo_info "Distribution: CentOS. Using yum."
+    yum install -y cryptsetup-luks pv
   fi
 }
 
@@ -304,17 +316,18 @@ function setup_device(){
     else
       create_random_secret
       s3cret=$(create_random_secret)
-      logs_debug "Your random generated passphrase: $s3cret"
-      send_debug_mail
+      logs_debug "Your random generated passphrase: $s3cret" #TODO WARNING REMOVE
+      send_debug_mail #TODO WARNING REMOVE
     fi
     #TODO the password can't be longer 512 char
     # Start encryption procedure
-    logs_info "prima della criptazione"
-    printf "$s3cret\n" | cryptsetup -v --cipher $cipher_algorithm --key-size $keysize --hash $hash_algorithm --iter-time 2000 --use-urandom luksFormat $device --batch-mode
-    logs_info "criptazione eseguita"
+    #printf "$s3cret\n" | cryptsetup -v --cipher $cipher_algorithm --key-size $keysize --hash $hash_algorithm --iter-time 2000 --use-urandom luksFormat $device --batch-mode
+    create_vault_env
+    python ./write_secret_to_vault.py -v $vault_url -w $wrapping_token -s $secret_path --key $user_key --value $s3cret
   else
     # Start standard encryption
-    cryptsetup -v --cipher $cipher_algorithm --key-size $keysize --hash $hash_algorithm --iter-time 2000 --use-urandom --verify-passphrase luksFormat $device --batch-mode
+    #cryptsetup -v --cipher $cipher_algorithm --key-size $keysize --hash $hash_algorithm --iter-time 2000 --use-urandom --verify-passphrase luksFormat $device --batch-mode
+    echo "test"
   fi
 
   ecode=$?
@@ -504,23 +517,46 @@ function read_ini_file(){
 }
 
 #____________________________________
+# Send a notification mail.
+# Only for testing!
+
 function send_debug_mail(){
 
-subject="[luks] send luks password for testing purpors"
-body="Your random generated passphrase: $s3cret"
-from="laniakea@elixir-italy.org"
-to="laniakea.testuser@gmail.com"
+  subject="[luks] send luks password for testing purpors"
+  body="Your random generated passphrase: $s3cret"
+  from="laniakea@elixir-italy.org"
+  to="laniakea.testuser@gmail.com"
 
-  if [[ -r /etc/os-release ]]; then
-    . /etc/os-release
-    echo_info "$ID"
-    if [ "$ID" = "ubuntu" ]; then
-      echo_info "Placeholder. Unable to send mail!"
-    else
-      yum install -y mailx
-      echo $body | /usr/bin/mail -r $from -s $subject $to
-    fi
+  if [ "$DISTNAME" = "ubuntu" ]; then
+    echo_info "Placeholder. Unable to send mail!"
   else
-    echo_info "Not running a distribution with /etc/os-release available."
+    yum install -y mailx  >> "$LOGFILE" 2>&1
+    echo $body | /usr/bin/mail -r $from -s $subject $to
   fi
+}
+
+#____________________________________
+function create_vault_env(){
+
+  echo_info 'Write LUKS passphrase to Hashicorp Vault'
+
+  # Run vault python script in a specific virtual environment
+  venv=/tmp/vault_venv
+
+  logs_debug 'Remove ansible virtualenv if exists'
+  rm -rf $venv
+
+  logs_debug 'Install virtualenv'
+  if [[ $DISTNAME = "ubuntu" ]]; then
+    apt-get -y update >> "$LOGFILE" 2>&1
+    apt-get install -y python-virtualenv >> "$LOGFILE" 2>&1
+  else
+    yum install -y python-virtualenv >> "$LOGFILE" 2>&1
+  fi
+
+  logs_debug 'Create virtualenv'
+  virtualenv --system-site-packages $venv >> "$LOGFILE" 2>&1;
+  source $venv/bin/activate >> "$LOGFILE" 2>&1
+  pip install pip --upgrade >> "$LOGFILE" 2>&1
+
 }
