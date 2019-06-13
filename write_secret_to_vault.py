@@ -16,7 +16,7 @@ logfile = '/tmp/readdb.log'
 def cli_options():
   parser = argparse.ArgumentParser(description='Vault connector')
   parser.add_argument('-v', '--vault-url', dest='vault_url', help='Vault endpoint')
-  parser.add_argument('-w', '--wrapped-token', dest='wrapped_token', help='Wrapped Token')
+  parser.add_argument('-w', '--wrapping-token', dest='wrapping_token', help='Wrapping Token')
   parser.add_argument('-p', '--secret-path', dest='secret_path', help='Secret path on vault')
   parser.add_argument('--key', dest='user_key', default='luks', help='Vault user key value, i.e. passphrase')
   parser.add_argument('--value', dest='user_value', help='Vault user key')
@@ -24,11 +24,11 @@ def cli_options():
 
 
 #______________________________________
-def unwrap_vault_token(url, wrapped_token):
+def unwrap_vault_token(url, wrapping_token):
 
   url = url + '/v1/sys/wrapping/unwrap'
 
-  headers = { "X-Vault-Token": wrapped_token }
+  headers = { "X-Vault-Token": wrapping_token }
 
   response = requests.post(url, headers=headers, verify=False)
 
@@ -101,7 +101,7 @@ def write_secret_to_vault():
   r.raise_for_status()
 
   # Write the secret
-  write_token = unwrap_vault_token( options.vault_url, options.wrapped_token )
+  write_token = unwrap_vault_token( options.vault_url, options.wrapping_token )
 
   response_output = post_secret( options.vault_url, options.secret_path, write_token, options.user_key, options.user_value )
 
