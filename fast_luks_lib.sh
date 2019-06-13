@@ -320,13 +320,12 @@ function setup_device(){
     fi
     #TODO the password can't be longer 512 char
     # Start encryption procedure
-    #printf "$s3cret\n" | cryptsetup -v --cipher $cipher_algorithm --key-size $keysize --hash $hash_algorithm --iter-time 2000 --use-urandom luksFormat $device --batch-mode
+    printf "$s3cret\n" | cryptsetup -v --cipher $cipher_algorithm --key-size $keysize --hash $hash_algorithm --iter-time 2000 --use-urandom luksFormat $device --batch-mode
     create_vault_env
     python ./write_secret_to_vault.py -v $vault_url -w $wrapping_token -s $secret_path --key $user_key --value $s3cret
   else
     # Start standard encryption
-    #cryptsetup -v --cipher $cipher_algorithm --key-size $keysize --hash $hash_algorithm --iter-time 2000 --use-urandom --verify-passphrase luksFormat $device --batch-mode
-    echo "test"
+    cryptsetup -v --cipher $cipher_algorithm --key-size $keysize --hash $hash_algorithm --iter-time 2000 --use-urandom --verify-passphrase luksFormat $device --batch-mode
   fi
 
   ecode=$?
