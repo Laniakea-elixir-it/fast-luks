@@ -17,7 +17,7 @@ def cli_options():
   parser = argparse.ArgumentParser(description='Vault connector')
   parser.add_argument('-v', '--vault-url', dest='vault_url', help='Vault endpoint')
   parser.add_argument('-w', '--wrapping-token', dest='wrapping_token', help='Wrapping Token')
-  parser.add_argument('-p', '--secret-path', dest='secret_path', help='Secret path on vault')
+  parser.add_argument('-s', '--secret-path', dest='secret_path', help='Secret path on vault')
   parser.add_argument('--key', dest='user_key', default='luks', help='Vault user key name')
   parser.add_argument('--value', dest='user_value', help='Vault user key value, i.e. passphrase')
   return parser.parse_args()
