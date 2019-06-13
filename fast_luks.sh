@@ -207,9 +207,9 @@ function build_luks_ecryption_cmd(){
     # Vault integration
     if [[ -v vault_url ]]; then
 
-      if [[ ! -v wrapping_token ]]; then echo_error "Wrapping token undefined"; fi
-      if [[ ! -v secret_path ]]; then echo_error "Secret path undefined"; fi
-      if [[ ! -v user_key ]]; then echo_error "Key undefined"; fi
+      if [[ ! -v wrapping_token ]]; then echo_error "Wrapping token undefined"; exit 1; fi
+      if [[ ! -v secret_path ]]; then echo_error "Secret path undefined"; exit 1; fi
+      if [[ ! -v user_key ]]; then echo_error "Key undefined"; exit 1; fi
 
       cmd="$cmd -v $vault_url -w $wrapping_token -s $secret_path --key $user_key"
 
