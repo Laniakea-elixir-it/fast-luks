@@ -314,9 +314,8 @@ function setup_device(){
         exit 1
       fi
     else
-      create_random_secret
       s3cret=$(create_random_secret)
-      logs_debug "Your random generated passphrase: $s3cret" #TODO WARNING REMOVE
+      logs_debug "Your random generated passphrase: $s3cret\n" #TODO WARNING REMOVE
       send_debug_mail #TODO WARNING REMOVE
     fi
     #TODO the password can't be longer 512 char
