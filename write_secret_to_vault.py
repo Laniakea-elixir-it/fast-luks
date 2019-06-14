@@ -101,7 +101,6 @@ def write_secret_to_vault():
   r = requests.get(options.vault_url)
   r.raise_for_status()
 
-  # Write the secret
   write_token = unwrap_vault_token( options.vault_url, options.wrapping_token )
 
   response_output = post_secret( options.vault_url, options.secret_path, write_token, options.user_key, options.user_value )
