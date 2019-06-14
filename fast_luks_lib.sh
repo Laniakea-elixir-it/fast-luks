@@ -425,6 +425,12 @@ function mount_vol(){
 
 #____________________________________
 function create_cryptdev_ini_file(){
+
+  if [ ! -f ${luks_cryptdev_file} ]; then
+    logs_debug "Create ${luks_cryptdev_file}"
+    install -D /dev/null ${luks_cryptdev_file}
+  fi
+
   echo "# This file has been generated using fast_luks.sh script" > ${luks_cryptdev_file}
   echo "# https://github.com/mtangaro/galaxycloud-testing/blob/master/fast_luks.sh" >> ${luks_cryptdev_file}
   echo "# The device name could change after reboot, please use UUID instead." >> ${luks_cryptdev_file}
