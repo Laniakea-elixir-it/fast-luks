@@ -315,8 +315,6 @@ function setup_device(){
       fi
     else
       s3cret=$(create_random_secret)
-      logs_debug "Your random generated passphrase: $s3cret\n" #TODO WARNING REMOVE
-      send_debug_mail #TODO WARNING REMOVE
     fi
     #TODO the password can't be longer 512 char
     # Start encryption procedure
@@ -518,25 +516,6 @@ function read_ini_file(){
   cfg.parser ${luks_cryptdev_file}
   cfg.section.luks
 
-}
-
-#____________________________________
-# Send a notification mail.
-# Only for testing!
-
-function send_debug_mail(){
-
-  subject="[luks] send luks password for testing purpors"
-  body="Your random generated passphrase: $s3cret"
-  from="laniakea@elixir-italy.org"
-  to="laniakea.testuser@gmail.com"
-
-  if [ "$DISTNAME" = "ubuntu" ]; then
-    echo_info "Placeholder. Unable to send mail!"
-  else
-    yum install -y mailx  >> "$LOGFILE" 2>&1
-    echo $body | /usr/bin/mail -r $from -s $subject $to
-  fi
 }
 
 #____________________________________
