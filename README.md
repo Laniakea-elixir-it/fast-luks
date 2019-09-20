@@ -21,7 +21,7 @@ It is mainly made by 5 components:
 
 After the encryption procedure the script continue running in background using nohup to run the fast_luks_volume_setup.sh script.
 
-The legacy version of this script is in ./legacy directory. The only difference is that the script still run in background, but if the parent process is killed, i.e. the terminal section, it will be killed, too.
+The legacy version of this script is in ./legacy directory and tagged as v1.0.0. The only difference is that the script still run in background, but if the parent process is killed, i.e. the terminal section, it will be killed, too.
 
 Optional arguments
 ------------------
@@ -91,5 +91,4 @@ Please find the original script here:
 
 https://github.com/JohnTroony/LUKS-OPs/blob/master/luks-ops.sh
 
-All credits to John Troon.
-
+Credits to John Troon for initial script.
