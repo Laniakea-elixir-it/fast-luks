@@ -1,9 +1,27 @@
 Fast-LUKS
 =========
 
-LUKS (Linux Unified Key Setup) script for Storage encryption development Repository
+LUKS (Linux Unified Key Setup) script for Storage encryption development Repository.
 
 Defaults value should not be changed. Changes are reccommended only to experts.
+
+Defaults parameters can be set from command line or changing the defaults.conf file. This is useful with Ansible.
+
+It is mainly made by 5 components:
+
+``fast_luks_encryption.sh``: which is responsible for the encryption.
+
+``fast_luks_volume_setup.sh``: which is in charge of ending volume setup procedure, i.e. format the volume.
+
+``fast_luks.sh``: it is the main script, calling fast_luks_encryption.sh and fast_luks_volume_setup.sh.
+
+``fast_luks_libs.sh``: all the fast_luks function are here.
+
+``defaults.conf``: default configuration file.
+
+After the encryption procedure the script continue running in background using nohup to run the fast_luks_volume_setup.sh script.
+
+The legacy version of this script is in ./legacy directory and tagged as v1.0.0. The only difference is that the script still run in background, but if the parent process is killed, i.e. the terminal section, it will be killed, too.
 
 Optional arguments
 ------------------
@@ -73,4 +91,4 @@ Please find the original script here:
 
 https://github.com/JohnTroony/LUKS-OPs/blob/master/luks-ops.sh
 
-All credits to John Troon.
+Credits to John Troon for initial script.
