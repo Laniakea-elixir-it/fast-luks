@@ -79,6 +79,24 @@ function logs_info(){ echo_info "$1" >> $LOGFILE 2>&1; }
 function logs_warn(){ echo_warn "$1" >> $LOGFILE 2>&1; }
 function logs_error(){ echo_error "$1" >> $LOGFILE 2>&1; }
 
+#________________________________
+# Get Distribution
+# Ubuntu and centos currently supported
+
+DISTNAME=''
+
+if [[ -r /etc/os-release ]]; then
+    . /etc/os-release
+    logs_info "$ID"
+    if [ "$ID" = "ubuntu" ]; then
+      DISTNAME='ubuntu'
+    else
+      DISTNAME='centos'
+    fi
+else
+    logs_warn "Not running a distribution with /etc/os-release available"
+fi
+
 #____________________________________
 # Lock/UnLock Section
 # http://wiki.bash-hackers.org/howto/mutex
@@ -165,18 +183,12 @@ function info(){
 # Install cryptsetup
 
 function install_cryptsetup(){
-  if [[ -r /etc/os-release ]]; then
-    . /etc/os-release
-    echo_info "$ID"
-    if [ "$ID" = "ubuntu" ]; then
-      echo_info "Distribution: Ubuntu. Using apt."
-      apt-get install -y cryptsetup pv
-    else
-      echo_info "Distribution: CentOS. Using yum."
-      yum install -y cryptsetup-luks pv
-    fi
+  if [ "$DISTNAME" = "ubuntu" ]; then
+    echo_info "Distribution: Ubuntu. Using apt."
+    apt-get install -y cryptsetup pv
   else
-    echo_info "Not running a distribution with /etc/os-release available."
+    echo_info "Distribution: CentOS. Using yum."
+    yum install -y cryptsetup-luks pv
   fi
 }
 
@@ -252,6 +264,22 @@ function umount_vol(){
 }
 
 #____________________________________
+# Passphrase Random generation
+function create_random_secret(){
+  #cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w $passphrase_length | head -n 1
+  #https://github.com/ansible/ansible/issues/12459
+  tr -d -c "a-zA-Z0-9" < /dev/urandom | head -c $passphrase_length
+}
+
+#____________________________________
+# Unset sensitive variables
+function unset_variables(){
+  unset passphrase
+  unset passphrase_confirmation
+  unset s3cret
+}
+
+#____________________________________
 function setup_device(){
   echo_info "Start the encryption procedure."
   logs_info "Using $cipher_algorithm algorithm to luksformat the volume."
@@ -260,7 +288,44 @@ function setup_device(){
   logs_debug "Cryptsetup full command:"
   logs_debug "cryptsetup -v --cipher $cipher_algorithm --key-size $keysize --hash $hash_algorithm --iter-time 2000 --use-urandom --verify-passphrase luksFormat $device --batch-mode"
 
-  cryptsetup -v --cipher $cipher_algorithm --key-size $keysize --hash $hash_algorithm --iter-time 2000 --use-urandom --verify-passphrase luksFormat $device --batch-mode
+  if $non_interactive; then
+    if [ -z "$passphrase_length" ]; then
+      if [ -z "$passphrase" ]; then
+        echo_error "Missing passphrase!"
+        # unset passphrase var
+        unset_variables
+        unlock
+        exit 1
+      fi
+      if [ -z "$passphrase_confirmation" ]; then
+        echo_error "Missing confirmation passphrase!"
+        # unset passphrase var
+        unset_variables
+        unlock
+        exit 1
+      fi
+      if [ "$passphrase" ==  "$passphrase_confirmation" ]; then
+        s3cret=$passphrase
+      else
+        echo_error "No matching passphrases!"
+        # unset passphrase var
+        unset_variables
+        unlock
+        exit 1
+      fi
+    else
+      s3cret=$(create_random_secret)
+    fi
+    #TODO the password can't be longer 512 char
+    # Start encryption procedure
+    printf "$s3cret\n" | cryptsetup -v --cipher $cipher_algorithm --key-size $keysize --hash $hash_algorithm --iter-time 2000 --use-urandom luksFormat $device --batch-mode
+    create_vault_env
+    python ./write_secret_to_vault.py -v $vault_url -w $wrapping_token -s $secret_path --key $user_key --value $s3cret
+  else
+    # Start standard encryption
+    cryptsetup -v --cipher $cipher_algorithm --key-size $keysize --hash $hash_algorithm --iter-time 2000 --use-urandom --verify-passphrase luksFormat $device --batch-mode
+  fi
+
   ecode=$?
   if [ $ecode != 0 ]; then
     # Cryptsetup returns 0 on success and a non-zero value on error.
@@ -272,7 +337,7 @@ function setup_device(){
     # 5 device already exists or device is busy.
     logs_error "Command cryptsetup failed with exit code $ecode! Mounting $device to $mountpoint and exiting." #TODO redirect exit code
     if [[ $ecode == 2 ]]; then echo_error "Bad passphrase. Please try again."; fi
-    mount $device $mountpoint
+    #mount $device $mountpoint
     unlock
     exit $ecode
   fi
@@ -283,7 +348,11 @@ function open_device(){
   echo ""
   echo_info "Open LUKS volume."
   if [ ! -b /dev/mapper/${cryptdev} ]; then
-    cryptsetup luksOpen $device $cryptdev
+    if $non_interactive; then
+      printf "$s3cret\n" | cryptsetup luksOpen $device $cryptdev
+    else
+      cryptsetup luksOpen $device $cryptdev
+    fi
     openec=$?
     if [[ $openec != 0 ]]; then
       if [[ $openec == 2 ]]; then echo_error "Bad passphrase. Please try again."; fi
@@ -352,6 +421,12 @@ function mount_vol(){
 
 #____________________________________
 function create_cryptdev_ini_file(){
+
+  if [ ! -f ${luks_cryptdev_file} ]; then
+    logs_debug "Create ${luks_cryptdev_file}"
+    install -D /dev/null ${luks_cryptdev_file}
+  fi
+
   echo "# This file has been generated using fast_luks.sh script" > ${luks_cryptdev_file}
   echo "# https://github.com/mtangaro/galaxycloud-testing/blob/master/fast_luks.sh" >> ${luks_cryptdev_file}
   echo "# The device name could change after reboot, please use UUID instead." >> ${luks_cryptdev_file}
@@ -440,5 +515,31 @@ function read_ini_file(){
 
   cfg.parser ${luks_cryptdev_file}
   cfg.section.luks
+
+}
+
+#____________________________________
+function create_vault_env(){
+
+  echo_info 'Write LUKS passphrase to Hashicorp Vault'
+
+  # Run vault python script in a specific virtual environment
+  venv=/tmp/vault_venv
+
+  logs_debug 'Remove ansible virtualenv if exists'
+  rm -rf $venv
+
+  logs_debug 'Install virtualenv'
+  if [[ $DISTNAME = "ubuntu" ]]; then
+    apt-get -y update >> "$LOGFILE" 2>&1
+    apt-get install -y python-virtualenv >> "$LOGFILE" 2>&1
+  else
+    yum install -y python-virtualenv >> "$LOGFILE" 2>&1
+  fi
+
+  logs_debug 'Create virtualenv'
+  virtualenv --system-site-packages $venv >> "$LOGFILE" 2>&1;
+  source $venv/bin/activate >> "$LOGFILE" 2>&1
+  pip install pip --upgrade >> "$LOGFILE" 2>&1
 
 }

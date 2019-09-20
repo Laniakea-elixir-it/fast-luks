@@ -60,19 +60,30 @@ do
 
     -m|--mountpoint) mountpoint="$2"; shift ;;
 
-    -p|--passphrase) passphrase="$2"; shift ;;  #TODO to be implemented passphrase option for web-UI
-
     -f|--filesystem) filesystem="$2"; shift ;;
 
     --paranoid-mode) paranoid=true;;
 
-    # TODO implement non-interactive mode. Allow to pass password from command line.
-    # TODO Currently it just avoid to print intro and deny random password generation.
-    # TODO Allow to inject passphrase from command line (not secure)
-    # TODO create a "--passphrase" option to inject password.
-    --non-interactive) non_interactive=true;;
+    --foreground) foreground=true;; # run script in foreground, allowing to use it on ansible playbooks.
 
-    --foreground) foreground=true;; # run script in foregrond, allowing to use it on ansible playbooks.
+    # Implement non-interactive mode. Allow to pass password from command line.
+    -n|--non-interactive) non_interactive=true;;
+
+    -p1|--passphrase) passphrase="$2"; shift ;;
+
+    -p2|--verify-passphrase) passphrase_confirmation="$2"; shift ;;
+
+    # Alternatively a random password is setup
+    # WARNING the random password is currently displayed on stdout 
+    -r|--random-passhrase-generation) passphrase_length="$2"; shift ;;
+
+    -v|--vault-url) vault_url="$2"; shift ;;
+
+    -w|--wrapping-token) wrapping_token="$2"; shift ;;
+
+    -s|--secret-path) secret_path="$2"; shift ;;
+
+    --key) user_key="$2"; shift ;;
 
     --default) DEFAULT=YES;;
 
@@ -107,6 +118,13 @@ if [[ $print_help = true ]]; then
          -m, --mountpoint             \tset mount point [default: /export]\n
          -f, --filesystem             \tset filesystem [default: ext4]\n
          --non-interactive            \tnon-interactive mode, only command line [default: false]\n
+         -p1, --passphrase             \tinsert the passphrase
+         -p2, --verify-passphrase      \tverify passpharase\n
+         -r, --random-passhrase-generation \trandom password generation. No key file, the password is displayed on stdout, with the length provided by the user [INT]\n
+         -v, --vault-url              \tVault endpoint\n
+         -w, --wrapping-token         \tWrapping Token\n
+         -p, --secret-path            \tSecret path on vault\n
+         --key                        \tVault user key name\n
          --default                    \t\tload default values from defaults.conf\n"
   echo -e $usage
   logs_info "Just printing help."
@@ -157,6 +175,9 @@ create_cryptdev_ini_file
 
 # LUKS encryption finished. Print end dialogue.
 end_encrypt_procedure
+
+# unset passphrase var
+unset_variables
 
 # Unlock once done.
 unlock >> "$LOGFILE" 2>&1

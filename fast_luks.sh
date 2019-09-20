@@ -15,8 +15,8 @@
 # Otherwise it will use default $device and $mountpoint.
 
 STAT="fast-luks-interface"
-export LOGFILE="/var/log/galaxy/fast_luks$(date +"-%b-%d-%y-%H%M%S").log"
-#export LOGFILE="/tmp/fast_luks.log"
+#export LOGFILE="/var/log/galaxy/fast_luks$(date +"-%b-%d-%y-%H%M%S").log"
+export LOGFILE="/tmp/fast_luks.log"
 
 script_name=$0
 script_full_path=$(dirname "$0")
@@ -59,31 +59,42 @@ Npar=$#
 while [ $# -gt 0 ]
 do
   case $1 in
-    -c|--cipher) cipher_algorithm="$2"; shift;;
+    -c|--cipher) _userdefined_cipher_algorithm="$2"; shift;;
 
-    -k|--keysize) keysize="$2"; shift;;
+    -k|--keysize) _userdefined_keysize="$2"; shift;;
 
-    -a|--hash_algorithm) hash_algorithm="$2"; shift;;
+    -a|--hash_algorithm) _userdefined_hash_algorithm="$2"; shift;;
 
-    -d|--device) device="$2"; shift ;;
+    -d|--device) _userdefined_device="$2"; shift ;;
 
-    -e|--cryptdev) cryptdev_new="$2"; shift ;;
+    -e|--cryptdev) _userdefined_cryptdev="$2"; shift ;;
 
-    -m|--mountpoint) mountpoint="$2"; shift ;;
+    -m|--mountpoint) _userdefined_mountpoint="$2"; shift ;;
 
-    -p|--passphrase) passphrase="$2"; shift ;;  #TODO to be implemented passphrase option for web-UI
-
-    -f|--filesystem) filesystem="$2"; shift ;;
+    -f|--filesystem) _userdefined_filesystem="$2"; shift ;;
 
     --paranoid-mode) paranoid=true;;
 
-    # TODO implement non-interactive mode. Allow to pass password from command line.
-    # TODO Currently it just avoid to print intro and deny random password generation.
-    # TODO Allow to inject passphrase from command line (not secure)
-    # TODO create a "--passphrase" option to inject password.
-    --non-interactive) non_interactive=true;;
-
     --foreground) foreground=true;; # run script in foregrond, allowing to use it on ansible playbooks.
+
+    # Implement non-interactive mode. Allow to pass password from command line.
+    -n|--non-interactive) non_interactive=true;;
+
+    -p1|--passphrase) passphrase="$2"; shift ;;
+
+    -p2|--verify-passphrase) passphrase_confirmation="$2"; shift ;;
+
+    # Alternatively a random password is setup
+    # WARNING the random password is currently displayed on stdout 
+    -r|--random-passhrase-generation) passphrase_length="$2"; shift ;;
+
+    -v|--vault-url) vault_url="$2"; shift ;;
+
+    -w|--wrapping-token) wrapping_token="$2"; shift ;;
+
+    -s|--secret-path) secret_path="$2"; shift ;;
+
+    --key) user_key="$2"; shift ;;
 
     --default) DEFAULT=YES;;
 
@@ -117,8 +128,15 @@ if [[ $print_help = true ]]; then
          -m, --mountpoint             \tset mount point [default: /export]\n
          -f, --filesystem             \tset filesystem [default: ext4]\n
          --paranoid-mode              \twipe data after encryption procedure. This take time [default: false]\n
-         --non-interactive            \tnon-interactive mode, only command line [default: false]\n
          --foreground                 \t\trun script in foreground [default: false]\n
+         --non-interactive            \tnon-interactive mode, only command line [default: false]\n
+         -p1, --passphrase             \tinsert the passphrase
+         -p2, --verify-passphrase      \tverify passpharase\n
+         -r, --random-passhrase-generation \trandom password generation. No key file, the password is displayed on stdout, with the length provided by the user [INT]\n
+         -v, --vault-url              \tVault endpoint\n
+         -w, --wrapping-token         \tWrapping Token\n
+         -p, --secret-path            \tSecret path on vault\n
+         --key                        \tVault user key name\n
          --default                    \t\tload default values from defaults.conf\n"
   echo -e $usage
   logs_info "Just printing help."
@@ -163,10 +181,39 @@ function build_luks_ecryption_cmd(){
     cmd="$cmd --default"
   
   else
-  
-    cmd="$cmd -c $cipher_algorithm -k $keysize -a $hash_algorithm -d $device -m $mountpoint"
 
-    if [[ -v cryptdev_new ]]; then cmd="$cmd -e $cryptdev_new"; fi
+    if [[ -v non_interactive && $non_interactive == true ]]; then
+
+      cmd="$cmd -n"
+
+      if [[ -v passphrase ]]; then cmd="$cmd -p $passphrase"; fi
+      if [[ -v passphrase_confirmation ]]; then cmd="$cmd -p $passphrase_confirmation"; fi
+      if [[ -v passphrase_length ]]; then cmd="$cmd -r $passphrase_length"; fi
+
+    fi
+  
+    if [[ -v _userdefined_cipher_algorithm ]]; then cmd="$cmd -c $_userdefined_cipher_algorithm"; fi
+
+    if [[ -v _userdefined_keysize ]]; then cmd="$cmd -k $_userdefined_keysize"; fi
+
+    if [[ -v _userdefined_hash_algorithm ]]; then cmd="$cmd -a $_userdefined_hash_algorithm"; fi
+
+    if [[ -v _userdefined_device ]]; then cmd="$cmd -d $_userdefined_device"; fi
+
+    if [[ -v _userdefined_mountpoint ]]; then cmd="$cmd -m $_userdefined_mountpoint"; fi
+
+    if [[ -v _userdefined_cryptdev ]]; then cmd="$cmd -e $_userdefined_cryptdev"; fi
+
+    # Vault integration
+    if [[ -v vault_url ]]; then
+
+      if [[ ! -v wrapping_token ]]; then echo_error "Wrapping token undefined"; exit 1; fi
+      if [[ ! -v secret_path ]]; then echo_error "Secret path undefined"; exit 1; fi
+      if [[ ! -v user_key ]]; then echo_error "Key undefined"; exit 1; fi
+
+      cmd="$cmd -v $vault_url -w $wrapping_token -s $secret_path --key $user_key"
+
+    fi
 
   fi
 
@@ -201,9 +248,13 @@ function build_volume_setup_cmd(){
 
   else
 
-    cmd="$cmd -d $device -m $mountpoint -f $filesystem"
+    if [[ -v _userdefined_device ]]; then cmd="$cmd -d $_userdefined_device"; fi
 
-    if [[ -v cryptdev_new ]]; then cmd="$cmd -e $cryptdev_new"; fi
+    if [[ -v _userdefined_mountpoint ]]; then cmd="$cmd -m $_userdefined_mountpoint"; fi
+
+    if [[ -v _userdefined_filesystem ]]; then cmd="$cmd -f $_userdefined_filesystem"; fi
+
+    if [[ -v _userdefined_cryptdev ]]; then cmd="$cmd -e $_userdefined_cryptdev"; fi
 
     if [[ -v paranoid && $paranoid == true ]]; then cmd="$cmd --paranoid-mode"; fi
 
@@ -239,6 +290,10 @@ unset LC_ALL
 
 # Wait volume setup script start
 # the pid file name is hard-coded in fast_luks_volume_setup.sh
-while ! test -f "/var/run/fast_luks/fast-luks-volume-setup.pid"; do
-  sleep 1
-done
+# If the script is started in foreground, this is not needed.
+# The pid file is created and deleted before this step, so the script won't exit.
+if [[ $foreground == false ]]; then
+  while ! test -f "/var/run/fast_luks/fast-luks-volume-setup.pid"; do
+    sleep 1
+  done
+fi
