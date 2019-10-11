@@ -321,6 +321,7 @@ function setup_device(){
     printf "$s3cret\n" | cryptsetup -v --cipher $cipher_algorithm --key-size $keysize --hash $hash_algorithm --iter-time 2000 --use-urandom luksFormat $device --batch-mode
     create_vault_env
     python ./write_secret_to_vault.py -v $vault_url -w $wrapping_token -s $secret_path --key $user_key --value $s3cret
+    delete_vault_env
   else
     # Start standard encryption
     cryptsetup -v --cipher $cipher_algorithm --key-size $keysize --hash $hash_algorithm --iter-time 2000 --use-urandom --verify-passphrase luksFormat $device --batch-mode
@@ -543,3 +544,23 @@ function create_vault_env(){
   pip install pip --upgrade >> "$LOGFILE" 2>&1
 
 }
+
+#____________________________________
+function delete_vault_env(){
+
+  echo_info 'Delete Vault virtual environment'
+
+  venv=/tmp/vault_venv
+
+  logs_debug 'Remove ansible virtualenv if exists'
+  rm -rf $venv
+
+  logs_debug 'Uninstall virtualenv'
+  if [[ $DISTNAME = "ubuntu" ]]; then
+    apt-get remove -y python-virtualenv >> "$LOGFILE" 2>&1
+  else
+    yum remove -y python-virtualenv >> "$LOGFILE" 2>&1
+  fi
+
+}
+
