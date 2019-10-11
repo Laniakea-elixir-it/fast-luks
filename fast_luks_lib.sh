@@ -555,12 +555,12 @@ function delete_vault_env(){
   logs_debug 'Remove ansible virtualenv if exists'
   rm -rf $venv
 
-  logs_debug 'Uninstall virtualenv'
-  if [[ $DISTNAME = "ubuntu" ]]; then
-    apt-get remove -y python-virtualenv >> "$LOGFILE" 2>&1
-  else
-    yum remove -y python-virtualenv >> "$LOGFILE" 2>&1
-  fi
+  #logs_debug 'Uninstall virtualenv'
+  #if [[ $DISTNAME = "ubuntu" ]]; then
+  #  apt-get remove -y python-virtualenv >> "$LOGFILE" 2>&1
+  #else
+  #  yum remove -y python-virtualenv >> "$LOGFILE" 2>&1
+  #fi
 
 }
 
