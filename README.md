@@ -21,9 +21,7 @@ It is mainly made by 5 components:
 
 After the encryption procedure the script continue running in background using nohup to run the fast_luks_volume_setup.sh script.
 
-.. note::
-
-   The script requires superuser rights.
+### The script requires superuser rights. ###
 
 # Version v3.0.0
 - Add Hashicorp Vault support to store secrets.
