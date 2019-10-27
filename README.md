@@ -21,7 +21,15 @@ It is mainly made by 5 components:
 
 After the encryption procedure the script continue running in background using nohup to run the fast_luks_volume_setup.sh script.
 
-The legacy version of this script is in ./legacy directory and tagged as v1.0.0. The only difference is that the script still run in background, but if the parent process is killed, i.e. the terminal section, it will be killed, too.
+
+# Version 3.0.0
+- Add Hashicorp Vault support to store secrets.
+- Add non interactive mode allowing to setup passphrases from CLI.
+- Add passphrases random generation.
+
+The legacy version of this script is in ./legacy directory and tagged as v1.0.0.
+
+The Hashicorp Vault support has been added
 
 Optional arguments
 ------------------
@@ -101,7 +109,7 @@ Usage
 
 References
 ----------
-Laniakea documentation: http://laniakea.readthedocs.io
+Laniakea documentation: https://laniakea.readthedocs.io/en/latest/admin_documentation/encryption/fast_luks.html
 
 Licence
 -------
