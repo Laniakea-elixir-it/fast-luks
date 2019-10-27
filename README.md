@@ -23,6 +23,9 @@ After the encryption procedure the script continue running in background using n
 
 ### The script requires superuser rights. ###
 
+Changelog
+---------
+
 # Version v3.0.0
 - Add Hashicorp Vault support to store secrets.
 - Add non interactive mode allowing to setup passphrases from CLI.
