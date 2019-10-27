@@ -43,8 +43,6 @@ Optional arguments
 
 ``--paranoid-mode``: wipe data after encryption procedure. This take time [default: false].
 
-``--non-interactive``: non-interactive mode, only command line [default: false].
-
 ``--foreground``: run script in foreground [default: false].
 
 ### Implement non-interactive mode. Allow to pass password from command line. ###
