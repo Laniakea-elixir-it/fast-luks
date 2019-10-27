@@ -68,7 +68,7 @@ Options
 
 ``-p2, --verify-passphrase``: verify passphrase.
 
-### Alternatively a random password can be setup ###
+### Alternatively a random password can be setup. ###
 
 ``-r, --random-passhrase-generation``: enable random passphrase generation.
 
