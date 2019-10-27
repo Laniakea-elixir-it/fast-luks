@@ -21,18 +21,24 @@ It is mainly made by 5 components:
 
 After the encryption procedure the script continue running in background using nohup to run the fast_luks_volume_setup.sh script.
 
+.. note::
 
-# Version 3.0.0
+   The script requires superuser rights.
+
+# Version v3.0.0
 - Add Hashicorp Vault support to store secrets.
 - Add non interactive mode allowing to setup passphrases from CLI.
 - Add passphrases random generation.
 
-The legacy version of this script is in ./legacy directory and tagged as v1.0.0.
+# Version v2.0.0
+- Fix script on background.
+- Reworked script with libs, encrpyption, volume setup and main fast luks script.
 
-The Hashicorp Vault support has been added
+# Version v1.0.0 (legacy)
+First release.
 
-Optional arguments
-------------------
+Options
+-------
 ``-h, --help``: Show help.
 
 ``-c, --cipher``: set cipher algorithm [default: aes-xts-plain64].
