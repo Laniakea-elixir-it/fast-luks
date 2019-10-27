@@ -47,6 +47,30 @@ Optional arguments
 
 ``--foreground``: run script in foreground [default: false].
 
+### Implement non-interactive mode. Allow to pass password from command line. ###
+
+``-n, --non-interactive``: enable non-interactive mode. By default LUKS passphrase has to be interactively inserted. This option allows to pass the passphrase as parameter.
+
+``-p1, --passphrase``: set LUKS passphrase.
+
+``-p2, --verify-passphrase``: verify passphrase.
+
+### Alternatively a random password can be setup ###
+
+``-r, --random-passhrase-generation``: enable random passphrase generation.
+
+### Hashicorp VAULT integration. ###
+
+``-v, --vault-url``: Enable passphrase upload on Vault, adding Vault URL.
+
+``-w, --wrapping-token``: specify wrapping token.
+
+``-s --secret-path``: specify secrets path on Vault.
+
+``--key``: specify Vault key name.
+
+### Load defaults. ###
+
 ``--default``: load default values.
 
 Defaults
