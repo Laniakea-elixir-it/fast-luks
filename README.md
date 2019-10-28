@@ -26,7 +26,10 @@ After the encryption procedure the script continue running in background using n
 Changelog
 ---------
 
-# Version v3.0.0
+# Version v3.0.2
+- Clean the environment after the encryption.
+
+# Version v3.0.1
 - Add Hashicorp Vault support to store secrets.
 - Add non interactive mode allowing to setup passphrases from CLI.
 - Add passphrases random generation.
