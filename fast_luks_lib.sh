@@ -327,6 +327,8 @@ function setup_device(){
     cryptsetup -v --cipher $cipher_algorithm --key-size $keysize --hash $hash_algorithm --iter-time 2000 --use-urandom --verify-passphrase luksFormat $device --batch-mode
   fi
 
+  cryptsetup luksHeaderBackup --header-backup-file $luks_header_backup $device
+
   ecode=$?
   if [ $ecode != 0 ]; then
     # Cryptsetup returns 0 on success and a non-zero value on error.
@@ -486,6 +488,7 @@ function load_default_config(){
     non_interactive=false
     foreground=false
     luks_cryptdev_file='/tmp/luks-cryptdev.ini'
+    luks_header_backup='/tmp/luks-header.bck'
   fi
 }
 
