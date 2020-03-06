@@ -21,10 +21,28 @@ It is mainly made by 5 components:
 
 After the encryption procedure the script continue running in background using nohup to run the fast_luks_volume_setup.sh script.
 
-The legacy version of this script is in ./legacy directory and tagged as v1.0.0. The only difference is that the script still run in background, but if the parent process is killed, i.e. the terminal section, it will be killed, too.
+### The script requires superuser rights. ###
 
-Optional arguments
-------------------
+Changelog
+---------
+
+# Version v3.0.2
+- Clean the environment after the encryption.
+
+# Version v3.0.1
+- Add Hashicorp Vault support to store secrets.
+- Add non interactive mode allowing to setup passphrases from CLI.
+- Add passphrases random generation.
+
+# Version v2.0.0
+- Fix script on background.
+- Reworked script with libs, encrpyption, volume setup and main fast luks script.
+
+# Version v1.0.0 (legacy)
+First release.
+
+Options
+-------
 ``-h, --help``: Show help.
 
 ``-c, --cipher``: set cipher algorithm [default: aes-xts-plain64].
@@ -43,9 +61,31 @@ Optional arguments
 
 ``--paranoid-mode``: wipe data after encryption procedure. This take time [default: false].
 
-``--non-interactive``: non-interactive mode, only command line [default: false].
-
 ``--foreground``: run script in foreground [default: false].
+
+### Implement non-interactive mode. Allow to pass password from command line. ###
+
+``-n, --non-interactive``: enable non-interactive mode. By default LUKS passphrase has to be interactively inserted. This option allows to pass the passphrase as parameter.
+
+``-p1, --passphrase``: set LUKS passphrase.
+
+``-p2, --verify-passphrase``: verify passphrase.
+
+### Alternatively a random password can be setup. ###
+
+``-r, --random-passhrase-generation``: enable random passphrase generation.
+
+### Hashicorp VAULT integration. ###
+
+``-v, --vault-url``: Enable passphrase upload on Vault, adding Vault URL.
+
+``-w, --wrapping-token``: specify wrapping token.
+
+``-s --secret-path``: specify secrets path on Vault.
+
+``--key``: specify Vault key name.
+
+### Load defaults. ###
 
 ``--default``: load default values.
 
@@ -79,7 +119,7 @@ Usage
 
 References
 ----------
-Laniakea documentation: http://laniakea.readthedocs.io
+Laniakea documentation: https://laniakea.readthedocs.io/en/latest/admin_documentation/encryption/fast_luks.html
 
 Licence
 -------
