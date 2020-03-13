@@ -327,7 +327,9 @@ function setup_device(){
     cryptsetup -v --cipher $cipher_algorithm --key-size $keysize --hash $hash_algorithm --iter-time 2000 --use-urandom --verify-passphrase luksFormat $device --batch-mode
   fi
 
-  cryptsetup luksHeaderBackup --header-backup-file $luks_header_backup $device
+  # Backup LUKS Header
+  mkdir $luks_header_backup_dir
+  cryptsetup luksHeaderBackup --header-backup-file $luks_header_backup_dir/$luks_header_backup_file $device
 
   ecode=$?
   if [ $ecode != 0 ]; then
