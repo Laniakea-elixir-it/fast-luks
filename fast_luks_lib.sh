@@ -452,6 +452,7 @@ function create_cryptdev_ini_file(){
   echo "mapper = /dev/mapper/${cryptdev}" >> ${luks_cryptdev_file}
   echo "mountpoint = ${mountpoint}" >> ${luks_cryptdev_file}
   echo "filesystem = ${filesystem}" >> ${luks_cryptdev_file}
+  echo "header_path = ${luks_header_backup_dir}/${luks_header_backup_file}" >> ${luks_cryptdev_file}
 
   # Update Log file
   dmsetup info /dev/mapper/${cryptdev} >> "$LOGFILE" 2>&1
