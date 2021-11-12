@@ -98,7 +98,7 @@ def write_secret_to_vault():
   options = cli_options()
 
   # Check vault
-  r = requests.get(options.vault_url)
+  r = requests.get(options.vault_url, verify=False)
   r.raise_for_status()
 
   write_token = unwrap_vault_token( options.vault_url, options.wrapping_token )
